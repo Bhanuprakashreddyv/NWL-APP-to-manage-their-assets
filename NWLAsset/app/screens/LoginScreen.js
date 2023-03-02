@@ -34,6 +34,16 @@ function LoginScreen(props) {
                                 value={values.email}
                                 keyboardType="email-address"
                             />
+                            <MyTextInput
+                                label="Password"
+                                icon="lock"
+                                placeholder="Enter your password"
+                                placeholderTextColor={brand}
+                                onChangeText={handleChange('password')}
+                                onBlur={handleBlur('password')}
+                                value={values.password}
+                                secureTextEntry={true}
+                            />
                         </View>
                     )
                 }

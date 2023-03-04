@@ -1,20 +1,15 @@
 import React from 'react';
 import { View, StyleSheet, Image } from 'react-native';
+import formStyle from '../screens/FormSytle';
 
 function logo(props) {
     return (
-        <View style={styles.img}>
+        <View style={formStyle.logo}>
 
             <Image source={require('../assets/Northumbrian-Water-logo.png')} />
 
         </View>
     );
 }
-const styles = StyleSheet.create({
-    img: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingTop: 50
-    }
-})
+
 export default logo;

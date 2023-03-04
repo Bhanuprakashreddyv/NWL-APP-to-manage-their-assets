@@ -6,11 +6,24 @@ import { Octicons, Ionicons, Fontisto } from '@expo/vector-icons'
 import formStyle from './FormSytle';
 import colors from "../Config/colors";
 
+// firebase
+import { auth } from '../../FirebaseConfig';
+import { signOut } from "firebase/auth";
+
 // Keyboard avoiding wrapper
 import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
 
 function WelcomeScreen({ navigation }) {
-    const [hidePassword, setHidePassword] = useState(true)
+
+    const handleSignout = () => {
+        signOut(auth).then(() => {
+            navigation.navigate('LoginScreen')
+        }).catch((error) => {
+            console.log(error.message)
+        });
+
+    }
+
     return (
         <KeyBoardAvoidingWrapper>
             <View style={formStyle.innerContainer}>
@@ -29,7 +42,7 @@ function WelcomeScreen({ navigation }) {
                     <View style={formStyle.welcomeformArea}>
 
                         <View style={formStyle.line} />
-                        <TouchableOpacity onPress={() => { navigation.navigate('LoginScreen') }} style={formStyle.styledButton}>
+                        <TouchableOpacity onPress={handleSignout} style={formStyle.styledButton}>
                             <Text style={formStyle.buttonText}>
 
                                 Logout
@@ -46,25 +59,6 @@ function WelcomeScreen({ navigation }) {
     );
 }
 
-const MyTextInput = ({ label, icon, isPassword, hidePassword, setHidePassword, ...props }) => {
-    return (
-        <View>
-            <View style={formStyle.leftIcon}>
-                <Octicons name={icon} size={30} color={colors.brand}></Octicons>
 
-            </View>
-            <Text style={formStyle.styleInputLabel}>{label}</Text>
-            <TextInput style={formStyle.styleTextInput} {...props} />
-            {
-                isPassword && (
-                    <TouchableOpacity onPress={() => setHidePassword(!hidePassword)} style={formStyle.rightIcon}>
-                        <Ionicons name={hidePassword ? 'md-eye-off' : 'md-eye'} size={30} color={colors.darkLight} />
-                    </TouchableOpacity>
-                )
-            }
-        </View>
-
-    )
-}
 
 export default WelcomeScreen;

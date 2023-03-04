@@ -52,6 +52,7 @@ const formStyle = StyleSheet.create({
     formArea: {
         width: '90%',
         marginTop: 20,
+
         borderRadius: 15,
         borderWidth: 1,
         padding: 20,
@@ -182,6 +183,18 @@ const formStyle = StyleSheet.create({
     welcomeImage: {
         height: '150%',
         minWidth: '100%'
+    },
+    success: {
+        color: 'green',
+        fontWeight: 'bold',
+    },
+    error: {
+        color: 'red',
+        fontWeight: 'bold',
+    },
+    warning: {
+        color: 'orange',
+        fontWeight: 'bold',
     },
 });
 

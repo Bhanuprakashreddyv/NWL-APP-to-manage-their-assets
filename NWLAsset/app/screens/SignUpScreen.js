@@ -1,22 +1,43 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Text, TouchableOpacity, TextInput, Button } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
-import { Octicons, Ionicons, Fontisto } from '@expo/vector-icons'
+import { Octicons, Ionicons } from '@expo/vector-icons'
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
+import { auth } from '../../FirebaseConfig';
 import formStyle from './FormSytle';
 import colors from "../Config/colors";
-import Logo from "../components/Logo";
 import Welcome from '../components/Subtitle';
 import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
 
 function SignUpScreen({ navigation }) {
     const [hidePassword, setHidePassword] = useState(true)
+    const handleSignUp = (credentials, setSubmitting) => {
+        handleMessage(null)
+        createUserWithEmailAndPassword(auth, credentials.email, credentials.password)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                navigation.navigate('WelcomeScreen')
+            })
+            .catch(error => {
+                handleMessage(error.message, "FAILED")
+                alert(error.message)
+                setSubmitting(false);
+            });
 
-    
+    }
+    const [message, setMessage] = useState('');
+    const [textStyle, setTextStyle] = useState({});
+
+    const handleMessage = (message, type = 'FAILED') => {
+        setMessage(message);
+        let textStyle = {};
+        type === 'FAILED' ? textStyle = formStyle.error : textStyle = formStyle.success;
+        setTextStyle(textStyle);
+    }
     return (
-        <KeyboardAvoidingView>
+        <KeyBoardAvoidingWrapper>
             <View style={formStyle.styledContainer}>
                 <StatusBar style="dark" />
                 <View style={formStyle.innerContainer}>
@@ -24,10 +45,41 @@ function SignUpScreen({ navigation }) {
                     <Text style={formStyle.txt}>Account Sign Up
                     </Text>
                     <Formik initialValues={{ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' }}
-                        onSubmit={(values) => { console.log(values) }}>
+                        onSubmit={(values, { setSubmitting }) => {
+                            if (values.firstName == '') {
+                                handleMessage('First Name is Required');
+                                setSubmitting(false);
+                            }
+                            else if (values.lastName == '') {
+                                handleMessage('Last Name is Required');
+                                setSubmitting(false);
+                            }
+                            else if (values.email == '') {
+                                handleMessage('Email is Required');
+                                setSubmitting(false);
+                            }
+                            else if (values.password == '') {
+                                handleMessage('Password is Required');
+                                setSubmitting(false);
+                            }
+                            else if (values.confirmPassword == '') {
+                                handleMessage('Confirm Password is Required');
+                                setSubmitting(false);
+                            }
+                            else if (values.password != values.confirmPassword) {
+                                handleMessage('Passwords does not match ');
+                                setSubmitting(false);
+                            }
+                            else {
+                                handleSignUp(values, setSubmitting)
+                            }
+                            console.log(values)
+
+
+                        }}>
 
                         {
-                            ({ handleChange, handleBlur, handleSubmit, values }) => (
+                            ({ handleChange, handleBlur, handleSubmit, values, isSubmitting }) => (
                                 <View style={formStyle.formArea}>
 
 
@@ -86,13 +138,22 @@ function SignUpScreen({ navigation }) {
                                         hidePassword={hidePassword}
                                         setHidePassword={setHidePassword}
                                     />
-                                    <Text style={formStyle.MsgBox}>....</Text>
-                                    <TouchableOpacity onPress={handleSubmit} style={formStyle.styledButton}>
-                                        <Text style={formStyle.buttonText}>
+                                    <Text style={[formStyle.MsgBox, textStyle]}>{message}</Text>
 
-                                            Signup
-                                        </Text>
-                                    </TouchableOpacity>
+                                    {!isSubmitting &&
+
+                                        <TouchableOpacity onPress={handleSubmit} style={formStyle.styledButton}>
+                                            <Text style={formStyle.buttonText}>
+
+                                                Signup
+                                            </Text>
+                                        </TouchableOpacity>
+                                    }
+                                    {isSubmitting &&
+                                        <TouchableOpacity style={formStyle.styledButton}>
+                                            <ActivityIndicator size="large" color={colors.white} />
+                                        </TouchableOpacity>
+                                    }
                                     <View style={formStyle.line} />
 
                                     <View style={formStyle.extraView}>
@@ -111,7 +172,7 @@ function SignUpScreen({ navigation }) {
                     </Formik>
                 </View>
             </View>
-        </KeyboardAvoidingView>
+        </KeyBoardAvoidingWrapper>
 
     );
 }

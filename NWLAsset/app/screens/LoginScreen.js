@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { View, SafeAreaView, KeyboardAvoidingView, Text, TouchableOpacity, TextInput, Button } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
 import { Octicons, Ionicons, Fontisto } from '@expo/vector-icons'
+import { signInWithEmailAndPassword } from "firebase/auth";
+import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
 
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { firebase } from '../../Config';
-
+import { auth } from '../../FirebaseConfig';
 import formStyle from './FormSytle';
 import colors from "../Config/colors";
 import Logo from "../components/Logo";
@@ -16,21 +15,33 @@ import Welcome from '../components/Subtitle';
 
 
 function LoginScreen({ navigation }) {
-
-    const handleLogin = (credentials) => {
-        const auth = getAuth();
+    const handleLogin = (credentials, setSubmitting) => {
+        handleMessage(null)
         signInWithEmailAndPassword(auth, credentials.email, credentials.password)
             .then((userCredential) => {
-                console.log('Logged in with:', user.email);
                 const user = userCredential.user;
-
+                navigation.navigate('WelcomeScreen')
             })
-            .catch(error => alert(error.message));
+            .catch(error => {
+                handleMessage(error.message, "FAILED")
+                alert(error.message)
+                setSubmitting(false);
+            });
 
     }
-    const [hidePassword, setHidePassword] = useState(true)
+    const [hidePassword, setHidePassword] = useState(true);
+    const [message, setMessage] = useState('');
+    const [textStyle, setTextStyle] = useState({});
+
+    const handleMessage = (message, type = 'FAILED') => {
+        setMessage(message);
+        let textStyle = {};
+        type === 'FAILED' ? textStyle = formStyle.error : textStyle = formStyle.success;
+        setTextStyle(textStyle);
+
+    }
     return (
-        <KeyboardAvoidingView>
+        <KeyBoardAvoidingWrapper>
             <View style={formStyle.styledContainer}>
                 <StatusBar style="dark" />
                 <View style={formStyle.innerContainer}>
@@ -40,14 +51,20 @@ function LoginScreen({ navigation }) {
                     <Text style={formStyle.txt}>Account Login
                     </Text>
                     <Formik initialValues={{ email: '', password: '' }}
-                        onSubmit={(values) => {
-                            handleLogin(values)
-                            navigation.navigate('WelcomeScreen')
+                        onSubmit={(values, { setSubmitting }) => {
+
+                            if (values.email == '' || values.password == '') {
+                                handleMessage('Please Enter Email and Password');
+                                setSubmitting(false);
+                            }
+                            else {
+                                handleLogin(values, setSubmitting)
+                            }
 
                         }}>
 
                         {
-                            ({ handleChange, handleBlur, handleSubmit, values }) => (
+                            ({ handleChange, handleBlur, handleSubmit, values, isSubmitting }) => (
                                 <View style={formStyle.formArea}>
 
                                     <MyTextInput
@@ -74,13 +91,19 @@ function LoginScreen({ navigation }) {
                                         hidePassword={hidePassword}
                                         setHidePassword={setHidePassword}
                                     />
-                                    <Text style={formStyle.MsgBox}>....</Text>
-                                    <TouchableOpacity onPress={handleSubmit} style={formStyle.styledButton}>
-                                        <Text style={formStyle.buttonText}>
-
-                                            Login
-                                        </Text>
-                                    </TouchableOpacity>
+                                    <Text style={[formStyle.MsgBox, textStyle]}>{message}</Text>
+                                    {!isSubmitting &&
+                                        <TouchableOpacity onPress={handleSubmit} style={formStyle.styledButton}>
+                                            <Text style={formStyle.buttonText}>
+                                                Login
+                                            </Text>
+                                        </TouchableOpacity>
+                                    }
+                                    {isSubmitting &&
+                                        <TouchableOpacity style={formStyle.styledButton}>
+                                            <ActivityIndicator size="large" color={colors.white} />
+                                        </TouchableOpacity>
+                                    }
                                     <View style={formStyle.line} />
                                     {/* <TouchableOpacity onPress={handleSubmit} style={formStyle.googleButton}>
                                         <Fontisto name='google' color={colors.red} size={25} />
@@ -107,9 +130,7 @@ function LoginScreen({ navigation }) {
                 </View>
 
             </View>
-        </KeyboardAvoidingView>
-
-
+        </KeyBoardAvoidingWrapper>
     );
 }
 

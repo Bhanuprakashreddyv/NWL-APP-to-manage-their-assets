@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { firebase } from '../../Config';
+import { firebase } from '../../FirebaseConfig';
 import 'firebase/firestore'
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 // Screens 
@@ -12,19 +12,20 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import colors from '../Config/colors';
 const Stack = createNativeStackNavigator();
 
-const auth = getAuth();
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        console.log("we are authenticated")
-        const uid = user.uid;
-        // ...
-    } else {
-        // User is signed out
-        // ...
-    }
-});
-const [isLoggedIn, setIsLoggedIn] = useState(false)
+
 const RootStack = () => {
+    const auth = getAuth();
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            console.log("we are authenticated")
+            const uid = user.uid;
+            setIsLoggedIn(true)
+        } else {
+            // User is signed out
+            setIsLoggedIn(false)
+        }
+    });
     return (
         <NavigationContainer >
             {isLoggedIn ? <Stack.Navigator>
@@ -35,8 +36,6 @@ const RootStack = () => {
                         headerStyle:
                         {
                             backgroundColor: 'transparent',
-                            height: 0,
-                            paddingTop: 50,
 
                         },
                         headerTintColor: colors.white,
@@ -44,7 +43,7 @@ const RootStack = () => {
                         headerTitle: '',
 
                     }}>
-                    <Stack.Screen options={{ headerShown: false }} name='LoginScreen' component={LoginScreen} />
+                    <Stack.Screen name='LoginScreen' component={LoginScreen} />
                     <Stack.Screen options={{ headerTintColor: 'black' }} name='SignUpScreen' component={SignUpScreen} />
                 </Stack.Navigator>
             }

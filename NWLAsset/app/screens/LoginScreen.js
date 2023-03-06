@@ -12,8 +12,6 @@ import colors from "../Config/colors";
 import Logo from "../components/Logo";
 import Welcome from '../components/Subtitle';
 
-
-
 function LoginScreen({ navigation }) {
     const handleLogin = (credentials, setSubmitting) => {
         handleMessage(null)

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
-import { Octicons, Ionicons, Fontisto } from '@expo/vector-icons'
+import { Octicons, Ionicons } from '@expo/vector-icons'
 import { signInWithEmailAndPassword } from "firebase/auth";
 import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
 
@@ -15,7 +15,7 @@ import Welcome from '../components/Subtitle';
 function LoginScreen({ navigation }) {
     const handleLogin = (credentials, setSubmitting) => {
         handleMessage(null)
-        signInWithEmailAndPassword(auth, credentials.email, credentials.password)
+        signInWithEmailAndPassword(auth, credentials.email.trim(), credentials.password.trim())
             .then((userCredential) => {
                 const user = userCredential.user;
                 navigation.navigate('WelcomeScreen')

@@ -19,6 +19,7 @@ const formStyle = StyleSheet.create({
     },
     logo: {
         paddingTop: 50
+
     },
     subtitle: {
         fontSize: 20,
@@ -136,7 +137,7 @@ const formStyle = StyleSheet.create({
     },
     MsgBox: {
         textAlign: 'center',
-        fontSize: '13'
+        fontSize: 13
     },
     googleButton: {
         padding: 15,

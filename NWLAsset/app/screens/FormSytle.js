@@ -137,7 +137,7 @@ const formStyle = StyleSheet.create({
     },
     MsgBox: {
         textAlign: 'center',
-        fontSize: '13'
+        fontSize: 13
     },
     googleButton: {
         padding: 15,

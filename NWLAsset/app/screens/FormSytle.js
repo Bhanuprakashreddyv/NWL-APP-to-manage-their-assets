@@ -19,6 +19,7 @@ const formStyle = StyleSheet.create({
     },
     logo: {
         paddingTop: 50
+
     },
     subtitle: {
         fontSize: 20,

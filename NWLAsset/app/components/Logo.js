@@ -6,7 +6,7 @@ function logo(props) {
     return (
         <View style={formStyle.logo}>
 
-            <Image source={require('../assets/Northumbrian-Water-logo.png')} />
+            <Image source={require('../assets/Nlogo.png')} />
 
         </View>
     );

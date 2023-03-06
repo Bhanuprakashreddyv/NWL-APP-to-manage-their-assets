@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, TextInput, ActivityIndicator } from 'reac
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
 import { Octicons, Ionicons } from '@expo/vector-icons'
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 import { auth } from '../../FirebaseConfig';
 import formStyle from './FormSytle';
@@ -12,17 +12,30 @@ import Welcome from '../components/Subtitle';
 import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
 
 function SignUpScreen({ navigation }) {
-    const [hidePassword, setHidePassword] = useState(true)
+    const [hidePassword, setHidePassword] = useState(true);
+    const validateEmail = (email) => {
+        const regex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+        return regex.test(email);
+    };
+
     const handleSignUp = (credentials, setSubmitting) => {
         handleMessage(null)
         createUserWithEmailAndPassword(auth, credentials.email, credentials.password)
             .then((userCredential) => {
+                console.log(" User Created")
                 const user = userCredential.user;
-                navigation.navigate('WelcomeScreen')
+                updateProfile(user, {
+                    displayName: credentials.firstName + ' ' + credentials.lastName
+                }).then(() => {
+                    console.log(" Display name " + user.displayName)
+                }).catch((error) => {
+                    handleMessage(error.message, "FAILED")
+                    setSubmitting(false);
+                });
+                navigation.navigate('WelcomeScreen', user.displayName)
             })
             .catch(error => {
                 handleMessage(error.message, "FAILED")
-                alert(error.message)
                 setSubmitting(false);
             });
 
@@ -46,6 +59,7 @@ function SignUpScreen({ navigation }) {
                     </Text>
                     <Formik initialValues={{ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' }}
                         onSubmit={(values, { setSubmitting }) => {
+                            const isValidEmail = validateEmail(values.email);
                             if (values.firstName == '') {
                                 handleMessage('First Name is Required');
                                 setSubmitting(false);
@@ -66,8 +80,12 @@ function SignUpScreen({ navigation }) {
                                 handleMessage('Confirm Password is Required');
                                 setSubmitting(false);
                             }
-                            else if (values.password != values.confirmPassword) {
+                            else if (values.password.trim() != values.confirmPassword.trim()) {
                                 handleMessage('Passwords does not match ');
+                                setSubmitting(false);
+                            }
+                            else if (!isValidEmail) {
+                                handleMessage('Email is invalid');
                                 setSubmitting(false);
                             }
                             else {

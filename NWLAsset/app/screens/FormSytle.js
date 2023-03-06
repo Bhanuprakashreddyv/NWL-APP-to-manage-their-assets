@@ -38,8 +38,9 @@ const formStyle = StyleSheet.create({
     },
     welcomeSubTitle: {
         fontWeight: 'normal',
-        fontSize: 15,
+        fontSize: 20,
         marginTop: 5,
+
     },
 
     txt: {
@@ -108,6 +109,25 @@ const formStyle = StyleSheet.create({
 
     },
 
+    homeButton: {
+        padding: 15,
+        backgroundColor: 'transparent',
+        justifyContent: 'center',
+        alignContent: 'center',
+        alignItems: 'center',
+        borderRadius: 5,
+        borderColor: colors.brand,
+        borderWidth: 1,
+        marginVertical: 5,
+        height: 60,
+
+    },
+    buttonHomeText: {
+        color: colors.brand,
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center'
+    },
     buttonText: {
         color: colors.buttonColor,
         fontSize: 18,

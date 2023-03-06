@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
-import { View, Image, Text, TouchableOpacity, TextInput, Button } from 'react-native';
+import React from 'react';
+import { View, Image, Text, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar'
-import { Octicons, Ionicons, Fontisto } from '@expo/vector-icons'
-
 import formStyle from './FormSytle';
-import colors from "../Config/colors";
+import Ionicons from '@expo/vector-icons/Ionicons'
 
 // firebase
 import { auth } from '../../FirebaseConfig';
 import { signOut } from "firebase/auth";
-
 // Keyboard avoiding wrapper
 import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
 
-function WelcomeScreen({ navigation }) {
-
+function WelcomeScreen({ navigation, displayName = '' }) {
     const handleSignout = () => {
         signOut(auth).then(() => {
             navigation.navigate('LoginScreen')
@@ -23,7 +19,6 @@ function WelcomeScreen({ navigation }) {
         });
 
     }
-
     return (
         <KeyBoardAvoidingWrapper>
             <View style={formStyle.innerContainer}>
@@ -33,11 +28,10 @@ function WelcomeScreen({ navigation }) {
                 <View style={formStyle.welcomeContainer}>
 
 
-                    <Text style={formStyle.welcomTitle}>Welcome Buddy!
+                    <Text style={formStyle.welcomTitle}>Welcome {displayName || auth.currentUser?.displayName}!
                     </Text>
-                    <Text style={formStyle.welcomeSubTitle}>Uloma Okenyi
-                    </Text>
-                    <Text style={formStyle.welcomeSubTitle}>cyndibilo@gmail.com
+
+                    <Text style={formStyle.welcomeSubTitle}> {auth.currentUser?.email}
                     </Text>
                     <View style={formStyle.welcomeformArea}>
 
@@ -48,7 +42,12 @@ function WelcomeScreen({ navigation }) {
                                 Logout
                             </Text>
                         </TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} style={formStyle.homeButton}>
+                            <Text style={formStyle.buttonHomeText}>
 
+                                <Ionicons name='home' size={20} ></Ionicons>  Home
+                            </Text>
+                        </TouchableOpacity>
 
                     </View>
 

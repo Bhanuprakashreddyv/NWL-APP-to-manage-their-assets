@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { firebase } from '../../FirebaseConfig';
+import { auth } from '../../FirebaseConfig';
 import 'firebase/firestore'
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 // Screens 
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import colors from '../Config/colors';
+import TabNavigators from './TabNavigators';
+
+
 const Stack = createNativeStackNavigator();
 
 
 const RootStack = () => {
-    const auth = getAuth();
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            console.log("we are authenticated")
-            const uid = user.uid;
+            console.log("authenticated")
             setIsLoggedIn(true)
         } else {
             // User is signed out
@@ -29,7 +29,8 @@ const RootStack = () => {
     return (
         <NavigationContainer >
             {isLoggedIn ? <Stack.Navigator>
-                <Stack.Screen name='WelcomeScreen' component={WelcomeScreen} />
+                <Stack.Screen options={{ backgroundColor: 'transparent', headerShown: false }} name='WelcomeScreen' component={WelcomeScreen} />
+                <Stack.Screen name="HomeScreen" component={TabNavigators} options={{ headerShown: false }} />
             </Stack.Navigator> :
                 <Stack.Navigator
                     screenOptions={{

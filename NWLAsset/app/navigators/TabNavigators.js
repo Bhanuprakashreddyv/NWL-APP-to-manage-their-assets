@@ -56,10 +56,16 @@ function TabNavigators(props) {
                     fontSize: 10,
                     fontWeight: 'bold',
                 },
+                backgroundColor: 'transparent',
                 tabBarStyle: {
                     paddingTop: 8,
                     paddingBottom: 8,
                 },
+                headerTitle: '',
+                contentStyle: {
+                    backgroundColor: 'transparent',
+                },
+
             })}
 
         >

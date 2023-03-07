@@ -39,13 +39,15 @@ const RootStack = () => {
                             backgroundColor: 'transparent',
 
                         },
-                        headerTintColor: colors.white,
-                        headerTransparent: true,
+                        cardStyle: { backgroundColor: '#fff' },
                         headerTitle: '',
+                        contentStyle: {
+                            backgroundColor: 'transparent',
+                        },
 
                     }}>
-                    <Stack.Screen name='LoginScreen' component={LoginScreen} />
-                    <Stack.Screen options={{ headerTintColor: 'black' }} name='SignUpScreen' component={SignUpScreen} />
+                    <Stack.Screen name='LoginScreen' component={LoginScreen} options={{ headerShown: false }} />
+                    <Stack.Screen options={{ headerTintColor: colors.brand }} name='SignUpScreen' component={SignUpScreen} />
                 </Stack.Navigator>
             }
 

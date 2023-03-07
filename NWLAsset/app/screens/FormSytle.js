@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
 import Constants from "expo-constants";
-
 import colors from "../Config/colors";
 const StatusBarHeight = Constants.statusBarHeight;
 const formStyle = StyleSheet.create({
@@ -9,7 +8,7 @@ const formStyle = StyleSheet.create({
         padding: 25,
         backgroundColor: colors.white,
         paddingTop: StatusBarHeight + 10,
-        paddingBottom: 200
+        paddingBottom: 300
 
     },
     innerContainer: {
@@ -18,12 +17,13 @@ const formStyle = StyleSheet.create({
         flex: 1
     },
     logo: {
-        paddingTop: 50
+        paddingTop: 50,
+        marginTop: 30
 
     },
     subtitle: {
         fontSize: 20,
-        marginTop: 30,
+        marginTop: 10,
         fontWeight: 'bold',
         color: colors.brand
 
@@ -54,7 +54,6 @@ const formStyle = StyleSheet.create({
     formArea: {
         width: '90%',
         marginTop: 20,
-
         borderRadius: 15,
         borderWidth: 1,
         padding: 20,

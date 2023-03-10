@@ -49,6 +49,47 @@ const AppStyle = StyleSheet.create({
         fontSize: 40,
         fontWeight: 'bold',
     },
+    siteListContainer: {
+        padding: 5,
+        paddingTop: 10,
+    },
+    siteList: {
+        height: 60,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.primary,
+        borderRadius: 5,
+        borderWidth: 1,
+        borderColor: colors.brand
+    },
+
+    siteListText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: colors.brand,
+
+    },
+    searchIcon: {
+        marginTop: 15,
+        marginHorizontal: 8,
+        color: colors.white,
+    },
+    searchWrapper: {
+        backgroundColor: "#bdbbbb",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        height: 50,
+        margin: 10,
+        borderRadius: 10,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        paddingVertical: 8,
+        paddingHorizontal: 0,
+        color: "white"
+    }
 })
 
 export default AppStyle;

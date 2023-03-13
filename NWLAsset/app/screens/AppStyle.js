@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 import Constants from "expo-constants";
 import colors from "../Config/colors";
 
@@ -8,32 +8,32 @@ const AppStyle = StyleSheet.create({
         padding: 10,
         alignItems: 'center',
         paddingBottom: 20, // smaller padding below screen
-        backgroundColor: colors.white
-
+        backgroundColor: colors.white,
+        justifyContent: 'space-between',
     },
     siteImgContainer: {
-        width: '95%',
+        width: Dimensions.get('window').width * 0.9,
         padding: 10,
         marginTop: 40,
-        height: '25%',
+        height: Dimensions.get('window').height * 0.25,
         justifyContent: 'center', // center vertically
         alignItems: 'center', // center horizontally
         borderRadius: 15,
-
     },
     imgContainer: {
-        width: '95%',
-        height: '25%',
+        width: Dimensions.get('window').width * 0.9,
+        height: Dimensions.get('window').height * 0.2,
         justifyContent: 'center', // center vertically
         alignItems: 'center', // center horizontally
         borderRadius: 15,
-        marginTop: -5, // smaller margin between images
-        marginBottom: -15, // smaller space between last image and screen bottom
-
+        marginTop: 20, // no margin between images
+        marginBottom: 30, // no space between last image and screen bottom
     },
     image: {
         width: '100%',
-        borderRadius: 10,
+        height: '100%',
+        resizeMode: 'contain', // scale image to fit within container without distorting aspect ratio
+        borderRadius: 40,
     },
     textContainer: {
         position: 'absolute',
@@ -46,7 +46,7 @@ const AppStyle = StyleSheet.create({
     },
     text: {
         color: colors.white,
-        fontSize: 40,
+        fontSize: 30,
         fontWeight: 'bold',
     },
 })

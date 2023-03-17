@@ -58,6 +58,4 @@ function WelcomeScreen({ navigation, displayName = '' }) {
     );
 }
 
-
-
 export default WelcomeScreen;

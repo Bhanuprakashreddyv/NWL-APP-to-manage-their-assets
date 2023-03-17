@@ -10,7 +10,7 @@ import SignUpScreen from '../screens/SignUpScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import colors from '../Config/colors';
 import TabNavigators from './TabNavigators';
-
+import AssetScreen from '../screens/AssetScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +31,7 @@ const RootStack = () => {
             {isLoggedIn ? <Stack.Navigator>
                 <Stack.Screen options={{ backgroundColor: 'transparent', headerShown: false }} name='WelcomeScreen' component={WelcomeScreen} />
                 <Stack.Screen name="HomeScreen" component={TabNavigators} options={{ headerShown: false }} />
+                <Stack.Screen name="AssetScreen" options={{ headerTintColor: colors.brand, headerTitle: 'Asset List ' }} component={AssetScreen} />
             </Stack.Navigator> :
                 <Stack.Navigator
                     screenOptions={{

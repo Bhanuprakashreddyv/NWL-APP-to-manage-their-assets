@@ -6,4 +6,5 @@ export default {
     darkLight: '#7A7A7A',
     white: '#fff',
     red: '#CF0011',
+    darkash: '#bdbbbb'
 }

@@ -52,7 +52,9 @@ const AppStyle = StyleSheet.create({
     siteListContainer: {
         padding: 5,
         paddingTop: 10,
+
     },
+
     siteList: {
         height: 60,
         flex: 1,
@@ -70,13 +72,33 @@ const AppStyle = StyleSheet.create({
         color: colors.brand,
 
     },
+    assetListContainer: {
+        padding: 5,
+        paddingTop: 10,
+
+    },
+    assetListText: {
+        fontSize: 15,
+        color: colors.white,
+        fontWeight: 'bold',
+
+    },
+    assetList: {
+        height: 40,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.white,
+        borderWidth: 1,
+        borderColor: colors.brand
+    },
     searchIcon: {
         marginTop: 15,
         marginHorizontal: 8,
-        color: colors.white,
+        color: colors.brand,
     },
     searchWrapper: {
-        backgroundColor: "#bdbbbb",
+        backgroundColor: colors.darkash,
         flexDirection: "row",
         justifyContent: "space-between",
         height: 50,

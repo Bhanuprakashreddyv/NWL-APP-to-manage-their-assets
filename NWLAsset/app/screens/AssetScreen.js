@@ -13,9 +13,8 @@ function AssetScreen({ route }) {
 
     useEffect(() => {
         async function fetchAssetData() {
-            console.log(siteDocId)
-            // const subCollectionName = 'asset';
-            const data = await getSubcollectionData(siteDocId, siteDocId);
+            const subCollectionName = siteDocId;
+            const data = await getSubcollectionData(siteDocId, subCollectionName);
             console.log(data)
             setAssetData(data);
         }

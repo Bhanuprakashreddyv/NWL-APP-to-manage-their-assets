@@ -79,7 +79,7 @@ const AppStyle = StyleSheet.create({
     },
     assetListText: {
         fontSize: 15,
-        color: colors.white,
+        color: colors.brand,
         fontWeight: 'bold',
 
     },
@@ -95,7 +95,7 @@ const AppStyle = StyleSheet.create({
     searchIcon: {
         marginTop: 15,
         marginHorizontal: 8,
-        color: colors.brand,
+        color: colors.white,
     },
     searchWrapper: {
         backgroundColor: colors.darkash,

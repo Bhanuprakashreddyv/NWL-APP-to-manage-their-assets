@@ -71,7 +71,7 @@ function TabNavigators(props) {
         >
             <Tab.Screen name={homeName} component={HomeScreen} />
             <Tab.Screen name={siteName} component={SiteScreen} options={{ headerTitle: 'Site' }} />
-            <Tab.Screen name={inspectionName} component={InspectionScreen} />
+            <Tab.Screen name={inspectionName} component={InspectionScreen} options={{ headerTitle: 'Add new Inspection' }} />
             <Tab.Screen name={reportName} component={ReportScreen} />
 
         </Tab.Navigator>

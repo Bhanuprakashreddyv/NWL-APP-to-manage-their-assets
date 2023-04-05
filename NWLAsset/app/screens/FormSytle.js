@@ -16,6 +16,20 @@ const formStyle = StyleSheet.create({
         alignItems: 'center',
         flex: 1
     },
+    inspectionStyledContainer: {
+        flex: 1,
+        backgroundColor: colors.white,
+        height: '100%',
+        width: '100%',
+        justifyContent: 'center',
+
+    },
+    inspectioninnerContainer: {
+        width: '100%',
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 10,
+    },
     logo: {
         paddingTop: 50,
         marginTop: 30
@@ -58,6 +72,18 @@ const formStyle = StyleSheet.create({
         borderWidth: 1,
         padding: 20,
         borderColor: colors.brand
+
+    },
+    inspectionFormArea: {
+        width: '100%',
+        marginTop: 10,
+        padding: 10,
+
+    },
+    inspectionFormContol: {
+
+        marginTop: 10,
+
 
     },
     welcomeformArea: {
@@ -216,6 +242,50 @@ const formStyle = StyleSheet.create({
         color: 'orange',
         fontWeight: 'bold',
     },
+
+    dropdown: {
+        height: 50,
+        borderColor: 'gray',
+        borderWidth: 0.5,
+        borderRadius: 8,
+        paddingHorizontal: 8,
+    },
+    smalldropdown: {
+        height: 50,
+        borderColor: 'gray',
+        borderWidth: 0.5,
+        borderRadius: 8,
+        paddingHorizontal: 8,
+        width: 160,
+    },
+    dropdownicon: {
+        marginRight: 5,
+    },
+    dropdownlabel: {
+        position: 'absolute',
+        backgroundColor: 'white',
+        left: 22,
+        top: 8,
+        zIndex: 999,
+        paddingHorizontal: 8,
+        fontSize: 14,
+    },
+    dropdownplaceholderStyle: {
+        fontSize: 16,
+    },
+    dropdownselectedTextStyle: {
+        fontSize: 16,
+    },
+    dropdowniconStyle: {
+        width: 20,
+        height: 20,
+    },
+    dropdowninputSearchStyle: {
+        height: 40,
+        fontSize: 16,
+    },
+
+
 });
 
 export default formStyle

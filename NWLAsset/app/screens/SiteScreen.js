@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { db } from '../../FirebaseConfig';
-import { getDocs, doc, collection, onSnapshot } from 'firebase/firestore';
-import colors from '../Config/colors';
+import { collection, onSnapshot } from 'firebase/firestore';
 import AppStyle from './AppStyle';
 import KeyBoardAvoidingWrapper from '../components/KeyBoardAvoidingWrapper';
 import Ionicons from '@expo/vector-icons/Ionicons'

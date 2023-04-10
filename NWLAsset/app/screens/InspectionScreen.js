@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Button, Image, ImageBackground, StyleSheet, Dimensions } from 'react-native';
 import { PinchGestureHandler, State } from 'react-native-gesture-handler';
+import FitImage from 'react-native-fit-image';
+import MasonryList from "react-native-masonry-list";
+import { FlatList } from 'react-native-gesture-handler';
 
 import { Dropdown } from 'react-native-element-dropdown';
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -8,6 +11,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
+import { UserInterfaceIdiom } from 'expo-constants';
 
 // Camera libraries 
 import { Camera } from 'expo-camera';
@@ -15,6 +19,7 @@ import { Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker'
 import * as VideoPicker from 'expo-image-picker';
 import Exif from 'react-native-exif';
+import * as MediaLibrary from 'expo-media-library';
 
 
 import colors from "../Config/colors";
@@ -79,6 +84,7 @@ function InspectionScreen({ navigation }) {
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [hasMediaLibraryPermission, setHasMediaLibraryPermission] = useState(null);
     const [images, setImages] = useState([]);
+    const [showImages, setShowImages] = useState(false);
     const [video, setVideo] = useState(null);
     const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
     const [recording, setRecording] = useState(false);
@@ -92,6 +98,7 @@ function InspectionScreen({ navigation }) {
     const [zoom, setZoom] = useState(0);
     const [zoomRatios, setZoomRatios] = useState([]);
     const [orientation, setOrientation] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     const cameraRef = useRef(null);
     const videoRef = useRef(null);
@@ -124,12 +131,11 @@ function InspectionScreen({ navigation }) {
             if (source) {
                 //  await cameraRef.current.pausePreview();
                 setIsPreview(true);
-                setCapturedImage(photo.uri);
+                setCapturedImage(photo);
                 console.log("picture source", source);
                 const imageOrientation = await getOrientation(source);
                 setOrientation(imageOrientation);
             }
-            setImages([...images, photo.uri]);
             setShowCamera(true);
 
         }
@@ -147,9 +153,13 @@ function InspectionScreen({ navigation }) {
     }
 
     const usePhoto = () => {
+        console.log(capturedImage)
         setImages([...images, capturedImage]);
         setCapturedImage(null);
         setIsPreview(false);
+        setShowCamera(false);
+        setShowImages(true);
+
     };
 
     const retakePhoto = async () => {
@@ -172,7 +182,24 @@ function InspectionScreen({ navigation }) {
                 : Camera.Constants.FlashMode.off
         );
     };
-   
+    const handleDeleteImage = (index) => {
+        console.log('Deleting image at index', index);
+
+        const newImages = [...images];
+
+        console.log('Image Array ' + newImages)
+
+        newImages.splice(index, 1);
+        setImages(newImages);
+    };
+
+    const handleImagePress = (image) => {
+        // setSelectedImage(image);
+    };
+
+
+
+
     const handleZoom = event => {
         const { nativeEvent } = event;
         if (nativeEvent.state === State.ACTIVE) {
@@ -328,7 +355,7 @@ function InspectionScreen({ navigation }) {
 
                 {isPreview && capturedImage ? (
                     <View style={styles.previewContainer}>
-                        <Image source={{ uri: capturedImage }} style={[styles.previewImage, { transform: [{ rotate: orientation + 'deg' }] }]} />
+                        <Image source={{ uri: capturedImage.uri }} style={[styles.previewImage, { transform: [{ rotate: orientation + 'deg' }] }]} />
                         <View style={styles.previewButtons}>
                             <TouchableOpacity style={styles.useButton} onPress={usePhoto}>
                                 <Text style={styles.previewText} >Use Photo</Text>
@@ -498,16 +525,82 @@ function InspectionScreen({ navigation }) {
 
 
                                     </View>
-                                    <View style={{ alignContent: 'left', justifyContent: 'left', textAlign: 'right', borderWidth: 1, }} >
-                                        <TouchableOpacity style={styles.captureButton} onPress={() => setShowCamera(true)}>
-                                            <Ionicons name="camera-outline" size={30} color="black" />
-                                        </TouchableOpacity>
-                                        {/* <TouchableOpacity onPress={() => setShowCamera(true)}>
 
-                                            <Text>Snap</Text>
-                                        </TouchableOpacity> */}
+                                    {showImages &&
+                                        <View style={{ padding: 2 }} >
+                                            {/* {images.map((image) => (
+
+                                                <TouchableOpacity key={image.id} onPress={() => handleImagePress(image)}>
+                                                    <Image key={image} source={{ uri: image.uri }} style={{ width: '95%', height: 600, margin: 5, marginRight: 10, borderRadius: 5 }} />
+                                                </TouchableOpacity>
+
+
+                                            ))
+                                            } */}
+
+                                            {/* <MasonryList
+                                                images={images}
+                                                spacing={4}
+                                                imageContainerStyle={{ borderRadius: 4 }}
+                                                customImageComponent={(props) => (
+                                                    <View style={{ position: 'relative' }}>
+                                                        <Image {...props} />
+                                                        <Text style={{ position: 'absolute', bottom: 8, left: 8, color: '#ffffff' }}>
+                                                            Index: {props.index}
+                                                        </Text>
+                                                        <TouchableOpacity
+                                                            style={{ position: 'absolute', top: 8, right: 8 }}
+                                                            onPress={() => handleDeleteImage(index)}
+                                                        >
+                                                            <Ionicons name="md-trash" size={24} color="#ffffff" />
+                                                        </TouchableOpacity>
+                                                    </View>
+
+                                                )}
+
+                                            /> */}
+                                            <FlatList
+                                                data={images}
+                                                keyExtractor={(item, index) => index.toString()}
+                                                numColumns={2}
+                                                renderItem={({ item, index }) => (
+                                                    <View style={{ flex: 1 / 2 }}>
+                                                        <TouchableOpacity onPress={() => handleImagePress(item)} style={{ marginTop: 5, margin: 5 }}>
+                                                            <Image
+                                                                source={{ uri: item.uri }}
+                                                                style={{ width: '100%', height: 350, borderRadius: 5 }}
+                                                            />
+                                                            <Text style={{ position: 'absolute', bottom: 8, left: 8, color: '#ffffff' }}>
+                                                                Index: {index}
+                                                            </Text>
+                                                            <TouchableOpacity
+                                                                style={{ position: 'absolute', top: 8, right: 8 }}
+                                                                onPress={() => handleDeleteImage(index)}
+                                                            >
+                                                                <Ionicons name="md-trash" size={24} color="#ffffff" />
+                                                            </TouchableOpacity>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                )}
+                                                contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 16 }}
+                                            />
+
+                                        </View>
+
+
+
+                                    }
+
+                                    <View style={{ flex: 1, flexDirection: 'row' }} >
+                                        <TouchableOpacity style={styles.captureButton} onPress={() => setShowCamera(true)}>
+                                            <Ionicons name="cloud-upload-outline" size={30} color="#047717" />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={styles.captureButton} onPress={() => setShowCamera(true)}>
+                                            <Ionicons name="camera-outline" size={30} color="#047717" />
+                                        </TouchableOpacity>
 
                                     </View>
+
 
                                     <Text style={[formStyle.MsgBox, textStyle]}>{message}</Text>
 
@@ -741,12 +834,17 @@ const styles = StyleSheet.create({
         backgroundColor: "transparent",
     },
 
-
     captureButton: {
-        alignSelf: "center",
-        position: 'relative',
+        alignSelf: "left",
         textAlign: 'left',
         left: 10,
+        borderRadius: 10,
+        padding: 15,
+        marginTop: 15,
+        marginRight: 15,
+        borderWidth: 1,
+        borderColor: colors.brand,
+
     },
 });
 export default InspectionScreen;

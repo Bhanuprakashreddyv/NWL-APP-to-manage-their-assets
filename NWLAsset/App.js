@@ -1,16 +1,53 @@
-//import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button, SafeAreaView, Alert, Platform, StatusBar, Dimensions } from 'react-native';
-import { useDeviceOrientation } from '@react-native-community/hooks';
+import { StyleSheet, View } from 'react-native';
+import { useState, useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import { auth } from './FirebaseConfig';
+import 'firebase/firestore'
+import { onAuthStateChanged } from "firebase/auth";
 
 //React Navigator
-import RootStack from './app/navigators/RootStack';
+
+import AuthStack from './app/navigators/AuthStack';
+import AppStack from './app/navigators/AppStack';
+const Stack = createNativeStackNavigator();
+
+
+
 export default function App() {
 
-  const orientation = useDeviceOrientation();
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (authUser) => {
+      setUser(authUser);
+      setIsLoading(false);
+    });
+
+    return unsubscribeAuth;
+  }, []);
   return (
     <View style={styles.container}>
 
-      <RootStack />
+      <NavigationContainer>
+        <Stack.Navigator>
+          {user ? (
+            <Stack.Screen
+              name="AppStack"
+              component={AppStack}
+              options={{ headerShown: false }}
+            />
+          ) : (
+            <Stack.Screen
+              name="AuthStack"
+              component={AuthStack}
+              options={{ headerShown: false }}
+            />
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
 
     </View>
   );

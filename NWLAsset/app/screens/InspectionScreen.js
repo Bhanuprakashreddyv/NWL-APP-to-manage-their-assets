@@ -1,79 +1,87 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Button, Image, ImageBackground, StyleSheet, Dimensions } from 'react-native';
-import { PinchGestureHandler, State } from 'react-native-gesture-handler';
-import FitImage from 'react-native-fit-image';
-import MasonryList from "react-native-masonry-list";
+import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
 import { Dropdown } from 'react-native-element-dropdown';
-import AntDesign from '@expo/vector-icons/AntDesign';
 import Ionicons from '@expo/vector-icons/Ionicons'
-
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
-import { UserInterfaceIdiom } from 'expo-constants';
 
 // Camera libraries 
 import { Camera } from 'expo-camera';
 import { Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker'
-import * as VideoPicker from 'expo-image-picker';
 import Exif from 'react-native-exif';
-import * as MediaLibrary from 'expo-media-library';
 
 
 import colors from "../Config/colors";
 import formStyle from './FormSytle';
 import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
-import { getCollectionData, getDropdownCollectionData, getSubcollectionData } from '../../FirestoreUtils';
-import AppStyle from './FormSytle';
 
-const WINDOW_HEIGHT = Dimensions.get("window").height;
-const closeButtonSize = Math.floor(WINDOW_HEIGHT * 0.032);
-const captureSize = Math.floor(WINDOW_HEIGHT * 0.09);
-
+import { getDropdownCollectionData, getSubcollectionData, saveDataToFirestore, updateDataInCollection } from '../../FirestoreUtils';
+import { auth, storage } from '../../FirebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
 function InspectionScreen({ navigation }) {
 
-
+    // Load Site, Asset, and Grade Data
     const [siteData, setSiteData] = useState([]);
     const [assetData, setAssetData] = useState([]);
     const [gradeData, setGradeData] = useState([]);
 
+
+    const [images, setImages] = useState([]);
+    const [showImages, setShowImages] = useState(false);
+    const [videos, setVideos] = useState([]);
+
+    const initialValues = {
+        site: '',
+        asset: '',
+        comment: '',
+        grade: '',
+    };
     useEffect(() => {
         async function fetchSiteData() {
             const data = await getDropdownCollectionData('site');
             setSiteData(data);
         }
         async function fetchGradeData() {
-            const data = await getCollectionData('grade');
+            const data = await getDropdownCollectionData('grade');
             console.log(data)
             setGradeData(data);
         }
         fetchSiteData();
         fetchGradeData();
+
+        // reset form values to empty every time component mounts
+        initialValues.asset = '';
+        initialValues.comment = '';
+        initialValues.site = '';
+        initialValues.grade = '';
+        setImages([]);
+        setVideos([]);
+        setShowImages(false);
+
+        console.log(images)
+        console.log(videos)
+
     }, [])
 
+    function resetForm() {
+
+    }
     async function fetchAssetData(siteId) {
         const data = await getSubcollectionData(siteId, siteId);
         console.log(data)
         setAssetData(data);
     }
+
     const [value, setValue] = useState(null);
     const [isFocus, setIsFocus] = useState(false);
-    const renderLabel = (label) => {
-        if (value || isFocus) {
-            return (
-                <Text style={[formStyle.dropdownlabel, isFocus && { color: colors.brand }]}>
-                    {label}
-                </Text>
-            );
-        }
-        return null;
-    };
 
+
+    // Error Message 
     const [message, setMessage] = useState('');
     const [textStyle, setTextStyle] = useState({});
-
     const handleMessage = (message, type = 'FAILED') => {
         setMessage(message);
         let textStyle = {};
@@ -81,24 +89,17 @@ function InspectionScreen({ navigation }) {
         setTextStyle(textStyle);
     }
 
+    // Camera and Picture 
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [hasMediaLibraryPermission, setHasMediaLibraryPermission] = useState(null);
-    const [images, setImages] = useState([]);
-    const [showImages, setShowImages] = useState(false);
-    const [video, setVideo] = useState(null);
+
     const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
-    const [recording, setRecording] = useState(false);
-    const [videoSource, setVideoSource] = useState(null);
     const [showCamera, setShowCamera] = useState(false);
     const [cameraReady, setCameraReady] = useState(false);
     const [flashMode, setFlashMode] = useState(Camera.Constants.FlashMode.off);
-    const [showVideo, setShowVideo] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
-    const [capturedImage, setCapturedImage] = useState(null);
-    const [zoom, setZoom] = useState(0);
-    const [zoomRatios, setZoomRatios] = useState([]);
+    const [capturedImage, setCapturedImage] = useState(false);
     const [orientation, setOrientation] = useState(null);
-    const [selectedImage, setSelectedImage] = useState(null);
 
     const cameraRef = useRef(null);
     const videoRef = useRef(null);
@@ -112,11 +113,7 @@ function InspectionScreen({ navigation }) {
             setHasMediaLibraryPermission(mediaLibraryStatus === 'granted');
         })();
 
-        const getZoomRatios = async () => {
-            const ratios = await cameraRef.current.getAvailableCameraZoomRatiosAsync();
-            setZoomRatios(ratios);
-        };
-        getZoomRatios();
+
     }, []);
 
     const onCameraReady = () => {
@@ -153,7 +150,6 @@ function InspectionScreen({ navigation }) {
     }
 
     const usePhoto = () => {
-        console.log(capturedImage)
         setImages([...images, capturedImage]);
         setCapturedImage(null);
         setIsPreview(false);
@@ -184,13 +180,66 @@ function InspectionScreen({ navigation }) {
     };
     const handleDeleteImage = (index) => {
         console.log('Deleting image at index', index);
-
         const newImages = [...images];
-
-        console.log('Image Array ' + newImages)
-
         newImages.splice(index, 1);
         setImages(newImages);
+    };
+
+
+    const uploadMedia = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Sorry, we need media library permissions to upload images and videos!');
+            return;
+        }
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: false,
+            aspect: [4, 3],
+            quality: 1,
+            allowsMultipleSelection: true, // Allow multiple selection
+
+        });
+
+        console.log(result)
+
+        if (!result.canceled && result.assets) {
+
+            const selectedImages = result.assets.filter((asset) => asset.type === 'image');
+            setImages([...images, ...selectedImages.map((image) => ({ uri: image.uri }))]);
+            const selectedVideos = result.assets.filter((asset) => asset.type === 'video');
+            setVideos([...videos, ...selectedVideos.map((video) => ({ uri: video.uri }))]);
+
+            setShowImages(true);
+        }
+
+    };
+
+    const handleDeleteVideo = (index) => {
+        setSelectedVideoIndex(index);
+        // show confirmation dialog
+        Alert.alert(
+            'Delete Video',
+            'Are you sure you want to delete this video?',
+            [
+                {
+                    text: 'Cancel',
+                    onPress: () => setSelectedVideoIndex(null),
+                    style: 'cancel'
+                },
+                {
+                    text: 'Delete',
+                    onPress: () => {
+                        const newVideos = [...videos];
+                        newVideos.splice(index, 1);
+                        setVideos(newVideos);
+                        setSelectedVideoIndex(null);
+                    },
+                    style: 'destructive'
+                }
+            ],
+            { cancelable: true }
+        );
     };
 
     const handleImagePress = (image) => {
@@ -198,143 +247,72 @@ function InspectionScreen({ navigation }) {
     };
 
 
-
-
-    const handleZoom = event => {
-        const { nativeEvent } = event;
-        if (nativeEvent.state === State.ACTIVE) {
-            const newZoom = zoom + (nativeEvent.scale - 1) / 10;
-            if (newZoom >= 0 && newZoom <= 1) {
-                setZoom(newZoom);
-            }
-        }
-    };
-    const startRecording = async () => {
-        if (videoRef.current && cameraReady && showVideo) {
-            setRecording(true);
-            let video = await videoRef.current.recordAsync();
-            console.log(video);
-            setImages([...images, video.uri]);
-        }
-    };
-
-
-    const stopRecording = async () => {
-        if (videoRef.current && cameraReady && showVideo) {
-            setRecording(false);
-            await videoRef.current.stopRecording();
-        }
-    };
-    const toggleVideoMode = () => {
-        setShowVideo(!showVideo);
-    };
-
-    const onLongPressButton = () => {
-        if (showVideo) {
-            startRecording();
-        }
-    };
-
-    const onLongPressButtonOut = () => {
-        if (showVideo) {
-            stopRecording();
-        }
-    };
-
-    const cancelPreview = async () => {
-        await cameraRef.current.resumePreview();
-        setIsPreview(false);
-        setVideoSource(null);
-    };
-
-
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        console.log(result);
-
-        if (!result.cancelled) {
-            setImages([...images, result.uri]);
-        }
-    };
-
-    const pickVideo = async () => {
-        let result = await VideoPicker.launchImageLibraryAsync({
-            mediaTypes: VideoPicker.MediaTypeOptions.All,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        console.log(result);
-
-        if (!result.cancelled) {
-            setVideo(result.uri);
-        }
-    };
-
-
-    const renderVideoRecordIndicator = () => (
-        <View style={styles.recordIndicatorContainer}>
-            <View style={styles.recordDot} />
-            <Text style={styles.recordTitle}>{"Recording..."}</Text>
-        </View>
-    );
-    const renderCaptureControl = () => (
-        <View>
-
-            <View style={styles.cameraButtonsView}>
-
-
-                <TouchableOpacity
-                    onPressIn={onLongPressButton}
-                    onPressOut={onLongPressButtonOut}
-                    onLongPress={() => setShowVideo(true)}
-                    onPress={takePicture}
-                    style={[styles.cameraButton, styles.cameraButtonCapture]}
-                >
-
-                    {/* {recording ? (
-                                <View style={styles.recordingIndicator} />
-                            ) : (
-                                <View style={styles.cameraButtonInner} />
-                            )} */}
-                </TouchableOpacity>
-            </View>
-            <View style={styles.control}>
-
-
-                <TouchableOpacity onPress={toggleVideoMode}>
-                    <Text style={styles.cameraButton}>{showVideo ? 'Picture' : 'Video'}</Text>
-                </TouchableOpacity>
-
-            </View>
-        </View>
-
-    );
-
-
-
-
-    const renderVideoPlayer = () => (
-        <Video
-            source={{ uri: videoSource }}
-            shouldPlay={true}
-            style={styles.media}
-        />
-    );
-
-
     if (hasCameraPermission === null || hasMediaLibraryPermission === null) {
         return <View />;
     }
     if (hasCameraPermission === false || hasMediaLibraryPermission === false) {
         return <Text>No access to camera or media library</Text>;
+    }
+
+    async function submitInspectionData(values, setSubmitting) {
+        try {
+
+            // Get the current user's ID
+            const user = auth.currentUser;
+            const userId = user ? user.uid : null;
+
+            // Save the form data to Firestore
+            const docId = await saveDataToFirestore('inspection', {
+                siteid: values.site,
+                assetid: values.asset,
+                comment: values.comment,
+                grade: values.grade,
+                userId: userId,
+            });
+
+            console.log('Data saved to Firestore with ID:', docId);
+
+            // Upload images to Firebase Storage 
+            const imageUrls = await Promise.all(images.map(async (image, index) => {
+                const filename = `inspection_${docId}_${index}`;
+                const storageRef = ref(storage, `inspections/${filename}`);
+                await uploadBytes(storageRef, image.uri);
+                const downloadUrl = await getDownloadURL(storageRef);
+                return { url: downloadUrl };
+
+            })
+            );
+
+            console.log('Image URLs:', JSON.stringify(imageUrls));
+
+            // Upload videos to Firebase Storage 
+            const videoUrls = await Promise.all(
+                videos.map(async (video, index) => {
+                    const filename = `inspection_${docId}_${index}`;
+                    const storageRef = ref(storage, `inspections/${filename}`);
+                    await uploadBytes(storageRef, video.uri);
+                    const downloadUrl = await getDownloadURL(storageRef);
+                    return { url: downloadUrl };
+                })
+            );
+
+            console.log('Video URLs:', JSON.stringify(videoUrls));
+
+            // Update inspection data in Firestore with download URLs of media files
+            await updateDataInCollection('inspection', docId, {
+                imageUrls: imageUrls,
+                videoUrls: videoUrls,
+            });
+
+            setSubmitting(false);
+            navigation.navigate('SuccessScreen')
+
+        }
+
+        catch (error) {
+            console.error('Error saving data:', error);
+            setSubmitting(false);
+        }
     }
 
 
@@ -406,24 +384,40 @@ function InspectionScreen({ navigation }) {
             <View style={formStyle.inspectionStyledContainer}>
                 <StatusBar style="dark" />
                 <View style={formStyle.inspectioninnerContainer}>
-
-
-                    <Formik initialValues={{ site: '', asset: '', comment: '', grade: '' }}
+                    <Formik initialValues={initialValues}
                         onSubmit={(values, { setSubmitting }) => {
-                            if (values.site == '') {
+
+                            if (!values.site || values.site === '') {
                                 handleMessage('Site is Required');
                                 setSubmitting(false);
                             }
-                            else if (values.asset == '') {
+                            else if (!values.asset || values.asset == '') {
                                 handleMessage('Asset is Required');
                                 setSubmitting(false);
                             }
-                            else if (values.comment == '') {
+                            else if (!values.grade || values.grade == '') {
+                                handleMessage('Grade is Required');
+                                setSubmitting(false);
+                            }
+                            else if (!values.comment || values.comment == '') {
                                 handleMessage('Comment is Required');
                                 setSubmitting(false);
                             }
+                            else if (images.length == 0 || videos.length == 0) {
+                                handleMessage('Media file is required .');
+                                setSubmitting(false);
+                            }
+                            else if (videos.length > 1) {
+                                handleMessage('You can only upload one video at a time.');
+                                setSubmitting(false);
+                            }
+                            else if (images.length > 4) {
+                                handleMessage('You can only upload four images at a time.');
+                                setSubmitting(false);
+                            }
                             else {
-                                // handleSignUp(values, setSubmitting)
+
+                                submitInspectionData(values, setSubmitting)
                             }
 
 
@@ -454,7 +448,7 @@ function InspectionScreen({ navigation }) {
                                                 setValue(item.value);
                                                 fetchAssetData(item.value)
                                                 setIsFocus(false);
-                                                handleChange('site');
+                                                handleChange('site')(item.value);
                                             }}
 
                                         />
@@ -471,16 +465,17 @@ function InspectionScreen({ navigation }) {
                                             search
                                             maxHeight={300}
                                             labelField="label"
-                                            valueField="id"
+                                            valueField="value"
                                             placeholder={!isFocus ? 'Select Asset' : '...'}
                                             searchPlaceholder="Search asset..."
                                             value={values.asset}
                                             onFocus={() => setIsFocus(true)}
                                             onBlur={() => setIsFocus(false)}
                                             onChange={item => {
+                                                console.log(item.value)
                                                 setValue(item.value);
                                                 setIsFocus(false);
-                                                handleChange('asset');
+                                                handleChange('asset')({ target: { value: item.value } });
                                             }}
 
                                         />
@@ -497,15 +492,15 @@ function InspectionScreen({ navigation }) {
                                             data={gradeData}
                                             maxHeight={300}
                                             labelField="label"
-                                            valueField="id"
+                                            valueField="value"
                                             placeholder={!isFocus ? 'Select Grade' : '...'}
-                                            value={values.asset}
+                                            value={values.grade}
                                             onFocus={() => setIsFocus(true)}
                                             onBlur={() => setIsFocus(false)}
                                             onChange={item => {
                                                 setValue(item.value);
                                                 setIsFocus(false);
-                                                handleChange('grade');
+                                                handleChange('grade')({ target: { value: item.value } });
                                             }}
 
                                         />
@@ -527,73 +522,60 @@ function InspectionScreen({ navigation }) {
                                     </View>
 
                                     {showImages &&
-                                        <View style={{ padding: 2 }} >
-                                            {/* {images.map((image) => (
+                                        <View style={{ padding: 2 }}>
+                                            {images.length > 0 && (
+                                                <FlatList
+                                                    data={images}
+                                                    keyExtractor={(item, index) => index.toString()}
+                                                    numColumns={2}
+                                                    renderItem={({ item, index }) => (
+                                                        <View style={{ flex: 1 / 2 }}>
+                                                            <TouchableOpacity onPress={() => handleImagePress(item)} style={{ marginTop: 5, margin: 5 }}>
+                                                                <Image
+                                                                    source={{ uri: item.uri }}
+                                                                    style={{ width: '100%', height: 350, borderRadius: 5 }}
+                                                                />
 
-                                                <TouchableOpacity key={image.id} onPress={() => handleImagePress(image)}>
-                                                    <Image key={image} source={{ uri: image.uri }} style={{ width: '95%', height: 600, margin: 5, marginRight: 10, borderRadius: 5 }} />
-                                                </TouchableOpacity>
+                                                                <TouchableOpacity
+                                                                    style={{ position: 'absolute', top: 8, right: 8 }}
+                                                                    onPress={() => handleDeleteImage(index)}
+                                                                >
+                                                                    <Ionicons name="md-trash" size={24} color="#ffffff" />
+                                                                </TouchableOpacity>
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    )}
+                                                    contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 16 }}
+                                                />
+                                            )}
 
-
-                                            ))
-                                            } */}
-
-                                            {/* <MasonryList
-                                                images={images}
-                                                spacing={4}
-                                                imageContainerStyle={{ borderRadius: 4 }}
-                                                customImageComponent={(props) => (
-                                                    <View style={{ position: 'relative' }}>
-                                                        <Image {...props} />
-                                                        <Text style={{ position: 'absolute', bottom: 8, left: 8, color: '#ffffff' }}>
-                                                            Index: {props.index}
-                                                        </Text>
-                                                        <TouchableOpacity
-                                                            style={{ position: 'absolute', top: 8, right: 8 }}
-                                                            onPress={() => handleDeleteImage(index)}
-                                                        >
-                                                            <Ionicons name="md-trash" size={24} color="#ffffff" />
-                                                        </TouchableOpacity>
-                                                    </View>
-
-                                                )}
-
-                                            /> */}
-                                            <FlatList
-                                                data={images}
-                                                keyExtractor={(item, index) => index.toString()}
-                                                numColumns={2}
-                                                renderItem={({ item, index }) => (
-                                                    <View style={{ flex: 1 / 2 }}>
-                                                        <TouchableOpacity onPress={() => handleImagePress(item)} style={{ marginTop: 5, margin: 5 }}>
-                                                            <Image
-                                                                source={{ uri: item.uri }}
+                                            {videos.length > 0 && (
+                                                <FlatList
+                                                    data={videos}
+                                                    keyExtractor={(item) => item.id}
+                                                    renderItem={({ item, index }) => (
+                                                        <View style={{ flex: 1 / 2 }}>
+                                                            <Video source={{ uri: item.uri }}
                                                                 style={{ width: '100%', height: 350, borderRadius: 5 }}
-                                                            />
-                                                            <Text style={{ position: 'absolute', bottom: 8, left: 8, color: '#ffffff' }}>
-                                                                Index: {index}
-                                                            </Text>
+                                                                resizeMode="cover"
+                                                                useNativeControls={true} />
                                                             <TouchableOpacity
                                                                 style={{ position: 'absolute', top: 8, right: 8 }}
-                                                                onPress={() => handleDeleteImage(index)}
+                                                                onPress={() => handleDeleteVideo(index)}
                                                             >
                                                                 <Ionicons name="md-trash" size={24} color="#ffffff" />
                                                             </TouchableOpacity>
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                )}
-                                                contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 16 }}
-                                            />
-
+                                                        </View>
+                                                    )}
+                                                />
+                                            )}
                                         </View>
-
-
 
                                     }
 
                                     <View style={{ flex: 1, flexDirection: 'row' }} >
-                                        <TouchableOpacity style={styles.captureButton} onPress={() => setShowCamera(true)}>
-                                            <Ionicons name="cloud-upload-outline" size={30} color="#047717" />
+                                        <TouchableOpacity style={styles.captureButton} onPress={uploadMedia}>
+                                            <Ionicons name="image" size={30} color="#047717" />
                                         </TouchableOpacity>
                                         <TouchableOpacity style={styles.captureButton} onPress={() => setShowCamera(true)}>
                                             <Ionicons name="camera-outline" size={30} color="#047717" />
@@ -618,7 +600,6 @@ function InspectionScreen({ navigation }) {
                                             <ActivityIndicator size="large" color={colors.white} />
                                         </TouchableOpacity>
                                     }
-                                    <View style={formStyle.line} />
 
 
                                 </View>
@@ -629,7 +610,7 @@ function InspectionScreen({ navigation }) {
                     </Formik>
                 </View>
             </View>
-        </KeyBoardAvoidingWrapper>
+        </KeyBoardAvoidingWrapper >
 
     );
 }
@@ -732,8 +713,8 @@ const styles = StyleSheet.create({
 
     container: {
         flex: 1,
-        width: Dimensions.get('window').width,
-        height: Dimensions.get('window').height,
+        //width: Dimensions.get('window').width,
+        //height: Dimensions.get('window').height,
     },
     cameraView: {
         position: "absolute",
@@ -782,19 +763,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
     },
 
-    // closeButton: {
-    //     position: "absolute",
-    //     top: 35,
-    //     left: 15,
-    //     height: closeButtonSize,
-    //     width: closeButtonSize,
-    //     borderRadius: Math.floor(closeButtonSize / 2),
-    //     justifyContent: "center",
-    //     alignItems: "center",
-    //     backgroundColor: "#c4c5c4",
-    //     opacity: 0.7,
-    //     zIndex: 2,
-    // },
     media: {
         ...StyleSheet.absoluteFillObject,
     },

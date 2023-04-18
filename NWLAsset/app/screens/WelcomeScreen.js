@@ -42,7 +42,7 @@ function WelcomeScreen({ navigation, displayName = '' }) {
                                 Logout
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} style={formStyle.homeButton}>
+                        <TouchableOpacity onPress={() => navigation.navigate('TabNavigators')} style={formStyle.homeButton}>
                             <Text style={formStyle.buttonHomeText}>
 
                                 <Ionicons name='home' size={20} ></Ionicons>  Home

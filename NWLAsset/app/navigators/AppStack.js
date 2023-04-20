@@ -10,7 +10,7 @@ import TabNavigators from './TabNavigators';
 import AuthStack from './AuthStack';
 import AssetScreen from '../screens/AssetScreen';
 import SuccessScreen from '../screens/SuccessScreen';
-
+import colors from '../Config/colors';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,7 +19,6 @@ const AppStack = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            console.log("authenticated")
             setIsLoggedIn(true)
         } else {
             // User is signed out
@@ -33,7 +32,7 @@ const AppStack = () => {
                 <>
                     <Stack.Screen options={{ backgroundColor: 'transparent', headerShown: false }} name='WelcomeScreen' component={WelcomeScreen} />
                     <Stack.Screen name="TabNavigators" component={TabNavigators} options={{ headerShown: false }} />
-                    <Stack.Screen options={{ backgroundColor: 'transparent' }} name='AssetScreen' component={AssetScreen} />
+                    <Stack.Screen options={{ backgroundColor: 'transparent', title: 'Asset', headerTintColor: colors.brand }} name='AssetScreen' component={AssetScreen} />
                     <Stack.Screen options={{ backgroundColor: 'transparent', headerShown: false }} name='SuccessScreen' component={SuccessScreen} />
 
                 </>

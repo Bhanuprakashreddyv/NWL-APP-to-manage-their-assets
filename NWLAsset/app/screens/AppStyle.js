@@ -12,13 +12,13 @@ const AppStyle = StyleSheet.create({
         justifyContent: 'space-between',
     },
     siteImgContainer: {
-        width: Dimensions.get('window').width * 0.9,
-        padding: 10,
-        marginTop: 40,
-        height: Dimensions.get('window').height * 0.25,
-        justifyContent: 'center', // center vertically
-        alignItems: 'center', // center horizontally
-        borderRadius: 15,
+        flex: 1,
+        flexDirection: 'column',
+        padding: 5,
+        alignItems: 'center',
+        paddingBottom: 20, // smaller padding below screen
+        backgroundColor: colors.white,
+        justifyContent: 'space-between',
     },
     imgContainer: {
         width: Dimensions.get('window').width * 0.9,
@@ -29,10 +29,12 @@ const AppStyle = StyleSheet.create({
         marginTop: 20, // no margin between images
         marginBottom: 30, // no space between last image and screen bottom
     },
+
+
+
     image: {
         width: '100%',
         height: '100%',
-        resizeMode: 'contain', // scale image to fit within container without distorting aspect ratio
         borderRadius: 40,
     },
     textContainer: {

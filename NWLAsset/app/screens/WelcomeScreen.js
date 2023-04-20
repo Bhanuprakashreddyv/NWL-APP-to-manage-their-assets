@@ -22,7 +22,7 @@ function WelcomeScreen({ navigation, displayName = '' }) {
     return (
         <KeyBoardAvoidingWrapper>
             <View style={formStyle.innerContainer}>
-                <Image style={formStyle.welcomeImage} source={require('../assets/welcomeImg.jpg')} />
+                <Image  source={require('../assets/welcomeImg.jpg')} />
 
                 <StatusBar style="light" />
                 <View style={formStyle.welcomeContainer}>

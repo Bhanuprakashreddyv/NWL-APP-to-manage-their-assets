@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text } from "react-native";
-import { db } from '../../FirebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
-import { async } from '@firebase/util';
 import { getSubcollectionData } from '../../FirestoreUtils';
 import AppStyle from './AppStyle';
 import { FlatList } from 'react-native-gesture-handler';

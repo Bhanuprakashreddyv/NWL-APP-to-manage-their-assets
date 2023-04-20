@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-
 import { Dropdown } from 'react-native-element-dropdown';
-import Ionicons from '@expo/vector-icons/Ionicons'
+
+import { Octicons, Ionicons } from '@expo/vector-icons'
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
-
 // Camera libraries 
 import { Camera } from 'expo-camera';
 import { Video } from 'expo-av';
@@ -21,6 +20,9 @@ import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
 import { getDropdownCollectionData, getSubcollectionData, saveDataToFirestore, updateDataInCollection } from '../../FirestoreUtils';
 import { auth, storage } from '../../FirebaseConfig';
 import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
+import { KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from "react-native";
+
+
 function InspectionScreen({ navigation }) {
 
     // Load Site, Asset, and Grade Data
@@ -42,11 +44,11 @@ function InspectionScreen({ navigation }) {
     useEffect(() => {
         async function fetchSiteData() {
             const data = await getDropdownCollectionData('site');
+            console.log(data)
             setSiteData(data);
         }
         async function fetchGradeData() {
             const data = await getDropdownCollectionData('grade');
-            console.log(data)
             setGradeData(data);
         }
         fetchSiteData();
@@ -66,9 +68,7 @@ function InspectionScreen({ navigation }) {
 
     }, [])
 
-    function resetForm() {
 
-    }
     async function fetchAssetData(siteId) {
         const data = await getSubcollectionData(siteId, siteId);
         console.log(data)
@@ -90,9 +90,6 @@ function InspectionScreen({ navigation }) {
     }
 
     // Camera and Picture 
-    const [hasCameraPermission, setHasCameraPermission] = useState(null);
-    const [hasMediaLibraryPermission, setHasMediaLibraryPermission] = useState(null);
-
     const [cameraType, setCameraType] = useState(Camera.Constants.Type.back);
     const [showCamera, setShowCamera] = useState(false);
     const [cameraReady, setCameraReady] = useState(false);
@@ -100,27 +97,21 @@ function InspectionScreen({ navigation }) {
     const [isPreview, setIsPreview] = useState(false);
     const [capturedImage, setCapturedImage] = useState(false);
     const [orientation, setOrientation] = useState(null);
+    const [showVideo, setshowVideo] = useState(false);
 
     const cameraRef = useRef(null);
     const videoRef = useRef(null);
-
-    useEffect(() => {
-        (async () => {
-            const { status: cameraStatus } = await Camera.requestCameraPermissionsAsync();
-            setHasCameraPermission(cameraStatus === 'granted');
-
-            const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            setHasMediaLibraryPermission(mediaLibraryStatus === 'granted');
-        })();
-
-
-    }, []);
 
     const onCameraReady = () => {
         setCameraReady(true);
     };
 
     const takePicture = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Sorry, we need camera permissions to capture images!');
+            return;
+        }
         if (cameraRef.current && cameraReady && !showVideo) {
             const options = { quality: 0.5, base64: true, skipProcessing: true };
             const photo = await cameraRef.current.takePictureAsync(options);
@@ -247,12 +238,6 @@ function InspectionScreen({ navigation }) {
     };
 
 
-    if (hasCameraPermission === null || hasMediaLibraryPermission === null) {
-        return <View />;
-    }
-    if (hasCameraPermission === false || hasMediaLibraryPermission === false) {
-        return <Text>No access to camera or media library</Text>;
-    }
 
     async function submitInspectionData(values, setSubmitting) {
         try {
@@ -318,6 +303,7 @@ function InspectionScreen({ navigation }) {
 
     if (showCamera) {
         return (
+
             <Camera
                 style={styles.camera}
                 ref={showVideo ? videoRef : cameraRef}
@@ -329,7 +315,6 @@ function InspectionScreen({ navigation }) {
                     console.log("cammera error", error);
                 }}
             >
-
 
                 {isPreview && capturedImage ? (
                     <View style={styles.previewContainer}>
@@ -381,6 +366,7 @@ function InspectionScreen({ navigation }) {
     }
     return (
         <KeyBoardAvoidingWrapper>
+
             <View style={formStyle.inspectionStyledContainer}>
                 <StatusBar style="dark" />
                 <View style={formStyle.inspectioninnerContainer}>
@@ -509,7 +495,7 @@ function InspectionScreen({ navigation }) {
 
                                     <View style={formStyle.inspectionFormContol}>
                                         <TextInput
-                                            style={{ height: 150, borderColor: 'gray', borderWidth: 1, borderRadius: 10 }}
+                                            style={{ height: 150, borderColor: 'gray', padding: 10, borderWidth: 1, borderRadius: 10 }}
                                             onChangeText={handleChange('comment')}
                                             value={values.comment}
                                             multiline={true}
@@ -575,7 +561,7 @@ function InspectionScreen({ navigation }) {
 
                                     <View style={{ flex: 1, flexDirection: 'row' }} >
                                         <TouchableOpacity style={styles.captureButton} onPress={uploadMedia}>
-                                            <Ionicons name="image" size={30} color="#047717" />
+                                            <Octicons name="image" size={30} color="#047717" />
                                         </TouchableOpacity>
                                         <TouchableOpacity style={styles.captureButton} onPress={() => setShowCamera(true)}>
                                             <Ionicons name="camera-outline" size={30} color="#047717" />
@@ -588,7 +574,7 @@ function InspectionScreen({ navigation }) {
 
                                     {!isSubmitting &&
 
-                                        <TouchableOpacity onPress={handleSubmit} style={formStyle.styledButton}>
+                                        <TouchableOpacity onPress={handleSubmit} style={styles.submitButton}>
                                             <Text style={formStyle.buttonText}>
 
                                                 Submit
@@ -596,7 +582,7 @@ function InspectionScreen({ navigation }) {
                                         </TouchableOpacity>
                                     }
                                     {isSubmitting &&
-                                        <TouchableOpacity style={formStyle.styledButton}>
+                                        <TouchableOpacity style={styles.submitButton}>
                                             <ActivityIndicator size="large" color={colors.white} />
                                         </TouchableOpacity>
                                     }
@@ -610,7 +596,7 @@ function InspectionScreen({ navigation }) {
                     </Formik>
                 </View>
             </View>
-        </KeyBoardAvoidingWrapper >
+        </KeyBoardAvoidingWrapper>
 
     );
 }
@@ -711,6 +697,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     },
 
+    submitButton: {
+        backgroundColor: colors.brand,
+        justifyContent: 'center',
+        alignContent: 'center',
+        alignItems: 'center',
+        borderRadius: 5,
+        marginVertical: 5,
+        height: 60,
+
+    },
     container: {
         flex: 1,
         //width: Dimensions.get('window').width,
@@ -803,8 +799,6 @@ const styles = StyleSheet.create({
     },
 
     captureButton: {
-        alignSelf: "left",
-        textAlign: 'left',
         left: 10,
         borderRadius: 10,
         padding: 15,

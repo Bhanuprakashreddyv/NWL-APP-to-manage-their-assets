@@ -3,7 +3,6 @@ import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, TextInput, T
 import { db } from '../../FirebaseConfig';
 import { collection, onSnapshot } from 'firebase/firestore';
 import AppStyle from './AppStyle';
-import KeyBoardAvoidingWrapper from '../components/KeyBoardAvoidingWrapper';
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { KeyboardAvoidingView } from 'react-native';
 function SiteScreen({ navigation }) {

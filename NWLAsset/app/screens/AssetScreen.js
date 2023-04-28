@@ -12,7 +12,6 @@ function AssetScreen({ route }) {
         async function fetchAssetData() {
             const subCollectionName = siteDocId;
             const data = await getSubcollectionData(siteDocId, subCollectionName);
-            console.log(data)
             setAssetData(data);
         }
         fetchAssetData();

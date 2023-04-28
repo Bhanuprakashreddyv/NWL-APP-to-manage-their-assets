@@ -14,6 +14,8 @@ function SiteScreen({ navigation }) {
     useEffect(() => {
         const subscriber = onSnapshot(collection(db, 'site'), (snapshot) => {
             const siteList = snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+
+            console.log(siteList)
             setSiteData(siteList);
             setSiteMasterData(siteList);
             setLoading(false);
@@ -30,7 +32,6 @@ function SiteScreen({ navigation }) {
                 const textData = text.toUpperCase();
                 return itemData.indexOf(textData) > -1
             });
-            console.log(searchData)
             setSiteData(searchData);
             setSearch(text)
         }

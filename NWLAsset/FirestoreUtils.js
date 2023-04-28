@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, updateDoc, serverTimestamp, getFirestore, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp, getFirestore, doc, setDoc, query, where, getDoc } from 'firebase/firestore';
 import { db } from './FirebaseConfig';
 
 export async function getCollectionData(collectionName) {
@@ -20,6 +20,7 @@ export async function getDropdownCollectionData(collectionName) {
     return collectionData;
 }
 
+
 export async function saveDataToFirestore(collectionName, data) {
     try {
         const db = getFirestore();
@@ -34,16 +35,26 @@ export async function saveDataToFirestore(collectionName, data) {
     }
 
 }
-// Update a document in a collection
-// export async function updateDataInCollection(collectionName, docId, data) {
 
-//     console.log('  data  ' + data)
-//     const db = getFirestore();
-//     await updateDoc(doc(db, collectionName, docId), {
-//         ...data,
-//         updatedAt: serverTimestamp(),
-//     });
-// }
+export async function getUserByUserId(userId) {
+    const q = query(collection(db, 'users'), where('userId', '==', userId));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+        // handle case where no user document was found
+        return null;
+    } else {
+        // return the user document
+        return querySnapshot.docs[0].data();
+    }
+}
+
+export async function getDocByID(collectionName, docId) {
+    const docRef = doc(db, collectionName, docId);
+    const querySnapshot = await getDoc(docRef);
+    const data = querySnapshot.data();
+    return data;
+}
+
 
 export async function updateDataInCollection(collectionName, docId, data) {
     const db = getFirestore();

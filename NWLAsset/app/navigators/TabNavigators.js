@@ -9,14 +9,57 @@ import HomeScreen from '../screens/HomeScreen';
 import SiteScreen from '../screens/SiteScreen';
 import InspectionScreen from '../screens/InspectionScreen';
 import ReportScreen from '../screens/ReportScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import SiteDashbordScreen from '../screens/SiteDashbordScreen';
+import AssetDashbordScreen from '../screens/AssetDashbordScreen';
 
 
 const homeName = 'HomeScreen'
 const siteName = 'SiteScreen'
 const inspectionName = 'InspectionScreen'
 const reportName = 'ReportScreen'
+const dashboardName = 'DashboardScreen'
 
 const Tab = createBottomTabNavigator();
+
+
+
+function DashboardTabNavigator() {
+    return (
+        <Tab.Navigator
+            screenOptions={{
+                style: {
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 20,
+                    right: 20,
+                    height: 60,
+                    borderRadius: 30,
+                    backgroundColor: '#fff',
+                    shadowColor: '#000',
+                    shadowOpacity: 0.3,
+                    shadowRadius: 10,
+                    elevation: 5,
+                }, 
+                headerShown: false,                
+                backgroundColor: 'green',
+
+            }}>
+            <Tab.Screen name="SiteDashbordScreen" component={SiteDashbordScreen} options={{
+                headerTitle: 'Site', title: 'Site', headerTintColor: colors.brand, tabBarIcon: ({ color, size }) => (
+                    <Ionicons name="business" size={size} color={color} />
+                ),
+            }} />
+            <Tab.Screen name="AssetDashbordScreen" component={AssetDashbordScreen} options={{
+                headerTitle: 'Asset', title: 'Asset', headerTintColor: colors.brand, tabBarIcon: ({ color, size }) => (
+                    <Ionicons name="stats-chart-outline" size={size} color={color} />
+                ),
+            }} />
+        </Tab.Navigator>
+    );
+}
+
+
 
 function TabNavigators(props) {
     return (
@@ -47,6 +90,11 @@ function TabNavigators(props) {
                             ? 'newspaper'
                             : 'newspaper-outline';
                     }
+                    else if (rn === dashboardName) {
+                        iconName = focused
+                            ? 'bar-chart'
+                            : 'bar-chart-outline';
+                    }
                     // You can return any component that you like here!
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
@@ -69,10 +117,11 @@ function TabNavigators(props) {
             })}
 
         >
-            <Tab.Screen name={homeName} component={HomeScreen} />
-            <Tab.Screen name={siteName} component={SiteScreen} options={{ headerTitle: 'Site', headerTintColor: colors.brand }} />
-            <Tab.Screen name={inspectionName} component={InspectionScreen} options={{ headerTitle: 'Add new Inspection' }} />
-            <Tab.Screen name={reportName} component={ReportScreen} />
+            <Tab.Screen name={homeName} component={HomeScreen} options={{ title: 'Home' }} />
+            <Tab.Screen name={siteName} component={SiteScreen} options={{ headerTitle: 'Site', title: 'Site', headerTintColor: colors.brand }} />
+            <Tab.Screen name={inspectionName} component={InspectionScreen} options={{ headerTitle: 'Add new Inspection', title: 'New Inspection', }} />
+            <Tab.Screen name={reportName} component={ReportScreen} options={{ headerTitle: 'Reports', title: 'Report', }} />
+            <Tab.Screen name={dashboardName} component={DashboardTabNavigator} options={{ headerTitle: 'Dashboard', title: 'Dashboard', }} />
 
         </Tab.Navigator>
 

@@ -3,9 +3,12 @@ import { View, Text, TouchableOpacity, TextInput, ActivityIndicator } from 'reac
 import { StatusBar } from 'expo-status-bar';
 import { Formik } from 'formik';
 import { Octicons, Ionicons } from '@expo/vector-icons'
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
-import { auth } from '../../FirebaseConfig';
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { saveDataToFirestore } from '../../FirestoreUtils';
+import { auth, db } from '../../FirebaseConfig';
+import { getFirestore, doc, setDoc, serverTimestamp, } from 'firebase/firestore';
+
 import formStyle from './FormSytle';
 import colors from "../Config/colors";
 import Welcome from '../components/Subtitle';
@@ -32,6 +35,14 @@ function SignUpScreen({ navigation }) {
                     handleMessage(error.message, "FAILED")
                     setSubmitting(false);
                 });
+
+                // Add the user's ID to a Firestore collection document
+                saveDataToFirestore('users', {
+                    userId: auth.currentUser?.uid,
+                    fullName: credentials.firstName + ' ' + credentials.lastName,
+                    email: credentials.email,
+                });
+
                 navigation.navigate('WelcomeScreen', user.displayName)
             })
             .catch(error => {

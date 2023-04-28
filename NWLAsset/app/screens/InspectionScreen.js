@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet, Alert, ActivityIndicator, ScrollView } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 import { Dropdown } from 'react-native-element-dropdown';
+import ImageResizer from 'react-native-image-resizer';
 
 import { Octicons, Ionicons } from '@expo/vector-icons'
 import { StatusBar } from 'expo-status-bar';
@@ -11,19 +12,23 @@ import { Camera } from 'expo-camera';
 import { Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker'
 import Exif from 'react-native-exif';
-
+import { ImageResult } from 'expo-image-manipulator';
 
 import colors from "../Config/colors";
 import formStyle from './FormSytle';
 import KeyBoardAvoidingWrapper from "../components/KeyBoardAvoidingWrapper"
 
-import { getDropdownCollectionData, getSubcollectionData, saveDataToFirestore, updateDataInCollection } from '../../FirestoreUtils';
+import { getDropdownCollectionData, getSubcollectionData, saveDataToFirestore, updateDataInCollection, getUserByUserId } from '../../FirestoreUtils';
 import { auth, storage } from '../../FirebaseConfig';
-import { ref, uploadBytes, getDownloadURL } from '@firebase/storage';
+import { ref, uploadBytes, getDownloadURL, uploadBytesResumable } from '@firebase/storage';
 import { KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from "react-native";
+
+import { useIsFocused } from '@react-navigation/native';
 
 
 function InspectionScreen({ navigation }) {
+    const isFocused = useIsFocused();
+
 
     // Load Site, Asset, and Grade Data
     const [siteData, setSiteData] = useState([]);
@@ -33,6 +38,7 @@ function InspectionScreen({ navigation }) {
 
     const [images, setImages] = useState([]);
     const [showImages, setShowImages] = useState(false);
+    const [selectedVideoIndex, setSelectedVideoIndex] = useState(false);
     const [videos, setVideos] = useState([]);
 
     const initialValues = {
@@ -42,31 +48,34 @@ function InspectionScreen({ navigation }) {
         grade: '',
     };
     useEffect(() => {
-        async function fetchSiteData() {
-            const data = await getDropdownCollectionData('site');
-            console.log(data)
-            setSiteData(data);
+        if (isFocused) {
+
+            async function fetchSiteData() {
+                const data = await getDropdownCollectionData('site');
+                setSiteData(data);
+            }
+            async function fetchGradeData() {
+                const data = await getDropdownCollectionData('grade');
+                setGradeData(data);
+            }
+            fetchSiteData();
+            fetchGradeData();
+
+            // reset form values to empty every time component mounts
+            initialValues.asset = '';
+            initialValues.comment = '';
+            initialValues.site = '';
+            initialValues.grade = '';
+            setImages([]);
+            setVideos([]);
+            setShowImages(false);
+
+            console.log(images)
+            console.log(videos)
         }
-        async function fetchGradeData() {
-            const data = await getDropdownCollectionData('grade');
-            setGradeData(data);
-        }
-        fetchSiteData();
-        fetchGradeData();
 
-        // reset form values to empty every time component mounts
-        initialValues.asset = '';
-        initialValues.comment = '';
-        initialValues.site = '';
-        initialValues.grade = '';
-        setImages([]);
-        setVideos([]);
-        setShowImages(false);
 
-        console.log(images)
-        console.log(videos)
-
-    }, [])
+    }, [isFocused])
 
 
     async function fetchAssetData(siteId) {
@@ -100,7 +109,6 @@ function InspectionScreen({ navigation }) {
     const [showVideo, setshowVideo] = useState(false);
 
     const cameraRef = useRef(null);
-    const videoRef = useRef(null);
 
     const onCameraReady = () => {
         setCameraReady(true);
@@ -184,7 +192,7 @@ function InspectionScreen({ navigation }) {
             return;
         }
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: false,
             aspect: [4, 3],
             quality: 1,
@@ -192,12 +200,31 @@ function InspectionScreen({ navigation }) {
 
         });
 
-        console.log(result)
 
         if (!result.canceled && result.assets) {
-
             const selectedImages = result.assets.filter((asset) => asset.type === 'image');
-            setImages([...images, ...selectedImages.map((image) => ({ uri: image.uri }))]);
+            // Resize the selected images
+            // const resizedImages = await Promise.all(
+            //     selectedImages.map(async (image) => {
+            //         const resizedImage = await ImageManipulator.manipulateAsync(
+            //             image.uri,
+            //             [{ resize: { width: 600 } }],
+            //             { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+            //         );
+            //         return { uri: resizedImage.uri };
+            //     })
+            // );
+            // const resizedImages = await Promise.all(
+            //     selectedImages.map(async (image) => {
+            //         console.log(image.uri)
+            //         const resizedUri = await ImageResizer.createResizedImage(image.uri, 600, 600, 'JPEG', 70);
+            //         return { uri: resizedUri };
+            //     })
+            // );
+            setImages([...images, ...selectedImages]);
+
+
+
             const selectedVideos = result.assets.filter((asset) => asset.type === 'video');
             setVideos([...videos, ...selectedVideos.map((video) => ({ uri: video.uri }))]);
 
@@ -238,55 +265,77 @@ function InspectionScreen({ navigation }) {
     };
 
 
+    const [assetLabel, setAssetLabel] = useState('');
+    const [siteLabel, setSiteLabel] = useState('');
+    const [gradeLabel, setGradeLabel] = useState('');
+    const [userFullName, setUserFullName] = useState('');
 
     async function submitInspectionData(values, setSubmitting) {
         try {
 
             // Get the current user's ID
-            const user = auth.currentUser;
-            const userId = user ? user.uid : null;
+            const userId = auth.currentUser?.uid;
+            const user = await getUserByUserId(userId)
 
-            // Save the form data to Firestore
+            if (user !== null) {
+                console.log(' first fullName ' + user.fullName)
+                setUserFullName(user.fullName)
+            }
+
+            console.log(' videos ' + JSON.stringify(videos))
+
+
+            // // Save the form data to Firestore
             const docId = await saveDataToFirestore('inspection', {
                 siteid: values.site,
                 assetid: values.asset,
                 comment: values.comment,
                 grade: values.grade,
                 userId: userId,
+                assetName: assetLabel,
+                siteName: siteLabel,
+                userName: user?.fullName,
+                gradeName: gradeLabel,
             });
 
-            console.log('Data saved to Firestore with ID:', docId);
+            // console.log('Data saved to Firestore with ID:', docId);
 
-            // Upload images to Firebase Storage 
-            const imageUrls = await Promise.all(images.map(async (image, index) => {
-                const filename = `inspection_${docId}_${index}`;
-                const storageRef = ref(storage, `inspections/${filename}`);
-                await uploadBytes(storageRef, image.uri);
-                const downloadUrl = await getDownloadURL(storageRef);
-                return { url: downloadUrl };
+            // // Upload images to Firebase Storage 
 
-            })
-            );
 
-            console.log('Image URLs:', JSON.stringify(imageUrls));
+            const imageUrls = await Promise.all(images.map(async (image) => {
+                const { uri } = image;
+                const response = await fetch(uri);
+                const blob = await response.blob();
+                const fileName = blob._data.name;
+                const storageRef = ref(storage, `inspections/${fileName}`);
+                const snapshot = await uploadBytesResumable(storageRef, blob);
+                const url = await getDownloadURL(snapshot.ref);
+                return { url };
+            }));
 
-            // Upload videos to Firebase Storage 
-            const videoUrls = await Promise.all(
-                videos.map(async (video, index) => {
-                    const filename = `inspection_${docId}_${index}`;
-                    const storageRef = ref(storage, `inspections/${filename}`);
-                    await uploadBytes(storageRef, video.uri);
-                    const downloadUrl = await getDownloadURL(storageRef);
-                    return { url: downloadUrl };
-                })
-            );
 
-            console.log('Video URLs:', JSON.stringify(videoUrls));
+            // // console.log('Image URLs:', JSON.stringify(imageUrls));
 
-            // Update inspection data in Firestore with download URLs of media files
+            // // Upload videos to Firebase Storage 
+            // const videoUrls = await Promise.all(videos.map(async (video) => {
+            //     const { uri } = video;
+            //     const response = await fetch(uri);
+            //     const blob = await response.blob();
+            //     const filename = blob._data.name;
+            //     const storageRef = ref(storage, `inspections/${filename}`);
+            //     const snapshot = await uploadBytesResumable(storageRef, blob);
+            //     const downloadUrl = await getDownloadURL(snapshot.ref);
+            //     return { url: downloadUrl };
+            // }));
+
+
+            // // console.log('Video URLs:', JSON.stringify(videoUrls));
+
+            // // Update inspection data in Firestore with download URLs of media files
             await updateDataInCollection('inspection', docId, {
                 imageUrls: imageUrls,
-                videoUrls: videoUrls,
+                //  videoUrls: videoUrls,
             });
 
             setSubmitting(false);
@@ -306,7 +355,7 @@ function InspectionScreen({ navigation }) {
 
             <Camera
                 style={styles.camera}
-                ref={showVideo ? videoRef : cameraRef}
+                ref={cameraRef}
                 onCameraReady={onCameraReady}
                 type={cameraType}
                 flashMode={flashMode}
@@ -389,8 +438,8 @@ function InspectionScreen({ navigation }) {
                                 handleMessage('Comment is Required');
                                 setSubmitting(false);
                             }
-                            else if (images.length == 0 || videos.length == 0) {
-                                handleMessage('Media file is required .');
+                            else if (images.length == 0) {
+                                handleMessage('Image file is required .');
                                 setSubmitting(false);
                             }
                             else if (videos.length > 1) {
@@ -430,11 +479,11 @@ function InspectionScreen({ navigation }) {
                                             onFocus={() => setIsFocus(true)}
                                             onBlur={() => setIsFocus(false)}
                                             onChange={item => {
-                                                console.log(item.value)
                                                 setValue(item.value);
                                                 fetchAssetData(item.value)
                                                 setIsFocus(false);
                                                 handleChange('site')(item.value);
+                                                setSiteLabel(item.label)
                                             }}
 
                                         />
@@ -458,10 +507,10 @@ function InspectionScreen({ navigation }) {
                                             onFocus={() => setIsFocus(true)}
                                             onBlur={() => setIsFocus(false)}
                                             onChange={item => {
-                                                console.log(item.value)
                                                 setValue(item.value);
                                                 setIsFocus(false);
                                                 handleChange('asset')({ target: { value: item.value } });
+                                                setAssetLabel(item.label)
                                             }}
 
                                         />
@@ -487,6 +536,7 @@ function InspectionScreen({ navigation }) {
                                                 setValue(item.value);
                                                 setIsFocus(false);
                                                 handleChange('grade')({ target: { value: item.value } });
+                                                setGradeLabel(item.label);
                                             }}
 
                                         />

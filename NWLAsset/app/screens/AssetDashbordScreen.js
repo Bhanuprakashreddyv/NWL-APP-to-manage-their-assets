@@ -1,11 +1,12 @@
-import { View, Image, Text, TouchableOpacity, FlatList, ScrollView, StyleSheet, Modal } from 'react-native';
+import { View, Image, Text, TouchableOpacity, FlatList, ScrollView, StyleSheet, Modal, Dimensions } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
-import { BarChart } from 'react-native-chart-kit';
+import { BarChart, PieChart, ChartLegend } from 'react-native-chart-kit';
 import colors from '../Config/colors';
 import { useIsFocused } from '@react-navigation/native';
 import { getCollectionData, getDropdownCollectionData, getSubcollectionData } from '../../FirestoreUtils';
 
+import CustomLegend from './CustomLegend';
 import { Dropdown } from 'react-native-element-dropdown';
 import formStyle from './FormSytle';
 import { Formik } from 'formik';
@@ -196,6 +197,16 @@ export default function AssetDashbordScreen() {
 
         ],
     };
+
+
+    const pieData = assetInspectionData.map(item => ({
+        name: item.name,
+        count: item.count,
+        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+        legendFontColor: 'black',
+        legendFontSize: 10,
+        legendFontWeight: 'bold',
+    }));
     const initialValues = {
         site: '',
 
@@ -294,22 +305,45 @@ export default function AssetDashbordScreen() {
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
+
                                 <View style={{ marginTop: 20 }}>
-                                    <Text style={{ textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: colors.brand, marginBottom: 20 }}>Inspected Asset</Text>
-                                    <BarChart
-                                        data={barData}
-                                        width={400}
+                                    <Text style={{ textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: colors.brand, marginBottom: 20 }}>Inspected Assets</Text>
+                                    <PieChart
+                                        data={pieData}
+                                        width={Dimensions.get('window').width - 16}
                                         height={400}
-                                        yAxisSuffix=" "
-                                        yAxisProps={{ fromZero: true }}
-                                        chartConfig={chartConfig}
-                                        verticalLabelRotation={40}
-                                        style={{
-                                            marginVertical: 8,
-                                            borderRadius: 16,
-                                            backgroundColor: "#fff",
+                                        chartConfig={{
+                                            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                            decimalPlaces: 2, // optional, defaults to 2dp
+                                            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                            style: {
+                                                borderRadius: 16
+                                            },
+
+
                                         }}
+                                        accessor="count"
+                                        backgroundColor="#FFF"
+                                        paddingLeft="40"
+                                        center={[10, 10]}
+                                        radius={100} // set the radius to a larger value
+                                        absolute
                                     />
+                                    {/* <ChartLegend
+                                        data={pieData}
+                                        width={400}
+                                        height={50}
+                                        chartConfig={{
+                                            backgroundColor: '#e26a00',
+                                            backgroundGradientFrom: '#fb8c00',
+                                            backgroundGradientTo: '#ffa726',
+                                            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                        }}
+                                        labelStyle={{ color: 'black' }}
+                                        render={() => <CustomLegend data={pieData} color={'black'} />}
+                                    /> */}
+
                                 </View>
                                 <View>
                                     <Text style={{ textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: colors.brand, marginBottom: 15 }}> Non-Inspected Asset</Text>

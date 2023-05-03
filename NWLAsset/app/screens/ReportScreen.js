@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { db } from '../../FirebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useIsFocused } from '@react-navigation/native';
 
 function ReportScreen({ navigation }) {
@@ -12,7 +12,7 @@ function ReportScreen({ navigation }) {
         if (isFocused) {
             // Do something here to refresh the screen, such as updating state or fetching new data
             async function fetchInspectionData() {
-                const querySnapshot = await getDocs(collection(db, 'inspection'));
+                const querySnapshot = await getDocs(query(collection(db, 'inspection'), orderBy('createdAt', 'desc')));
                 const data = querySnapshot.docs.map((doc) => {
                     const inspection = { ...doc.data(), id: doc.id }
                     if (inspection.createdAt && inspection.createdAt.toDate) {
@@ -24,7 +24,6 @@ function ReportScreen({ navigation }) {
                     return inspection;
 
                 });
-                console.log(data)
                 setInspectionData(data);
             };
             fetchInspectionData()

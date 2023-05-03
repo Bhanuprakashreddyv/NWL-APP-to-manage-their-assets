@@ -11,19 +11,19 @@ function HomeScreen({ navigation }) {
             <View style={AppStyle.container}>
                 <StatusBar style="dark" />
 
-                <TouchableOpacity style={AppStyle.imgContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('SiteScreen')} style={AppStyle.imgContainer}>
                     <Image style={AppStyle.image} source={require('../assets/sites.png')}></Image>
                     <View style={AppStyle.textContainer}>
                         <Text style={AppStyle.text}>Site</Text>
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={AppStyle.imgContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('InspectionScreen')} style={AppStyle.imgContainer}>
                     <Image style={AppStyle.image} source={require('../assets/newinspection.png')}></Image>
                     <View style={AppStyle.textContainer}>
                         <Text style={AppStyle.text}>New Inspection</Text>
                     </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={AppStyle.imgContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('ReportScreen')} style={AppStyle.imgContainer}>
                     <Image style={AppStyle.image} source={require('../assets/reports.png')}></Image>
                     <View style={AppStyle.textContainer}>
                         <Text style={AppStyle.text}>Report</Text>

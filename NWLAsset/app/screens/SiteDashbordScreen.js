@@ -1,7 +1,8 @@
-import { View, Image, Text, TouchableOpacity, FlatList, ScrollView, StyleSheet } from 'react-native';
+import { View, Image, Text, TouchableOpacity, FlatList, ScrollView, StyleSheet, useWindowDimensions, Dimensions } from 'react-native';
 import React, { useState, useEffect } from 'react';
 
 import { BarChart, PieChart } from 'react-native-chart-kit';
+//import { PieChart, BarChart } from 'react-native-svg-charts';
 import colors from '../Config/colors';
 import { collection, getDocs, query, where, orderBy, collectionGroup } from 'firebase/firestore';
 import { db } from '../../FirebaseConfig';
@@ -12,6 +13,7 @@ export default function SiteDashbordScreen() {
     const [siteInspections, setSiteInspections] = useState([]);
     const [noInspections, setNoInspections] = useState([]);
     const isFocused = useIsFocused();
+    const { width: screenWidth } = useWindowDimensions();
 
     useEffect(() => {
         if (isFocused) {
@@ -72,6 +74,7 @@ export default function SiteDashbordScreen() {
         yLabel: "Number of times inspected",
         xLabelStyle: "Site names",
         formatLabel: (value, index) => value,
+        barPercentage: 0.5,
         xLabelStyle: {
             fontSize: 14,
             color: "black",
@@ -108,23 +111,36 @@ export default function SiteDashbordScreen() {
         name: item.siteName,
         count: item.inspectionCount,
         color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+        legendFontColor: 'black',
+        legendFontSize: 10,
+        legendFontWeight: 'bold',
     }));
+    // const pieData = siteInspections.map(item => ({
+    //     value: item.inspectionCount,
+    //     svg: {
+    //         fill: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+    //     },
+    //     key: item.siteName,
+    // }));
 
-    const renderSiteInspectionItem = ({ item }) => {
-        return (
-            <View style={styles.siteInspectionItem}>
-                <Text style={styles.siteName}>{item.siteName}</Text>
-            </View>
-        );
+    const Labels = ({ slices }) => {
+        return slices.map((slice, index) => {
+            const { pieCentroid, data } = slice;
+            return (
+                <Text>
+                    {`${data.key}\n${data.value}`}
+                </Text>
+            );
+        });
     };
 
     return (
         <>
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ScrollView>
+            <View style={{ flex: 1, backgroundColor: 'white', paddingLeft: 5 }}>
+                <ScrollView >
                     <View style={{ marginTop: 20 }}>
-                        <Text style={{ textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: colors.brand, marginBottom: 20 }}>Inspected Sites</Text>
-                        <BarChart
+                        {/* <Text style={{ textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: colors.brand, marginBottom: 20 }}>Inspected Sites</Text> */}
+                        {/* <BarChart
                             data={barData}
                             width={400}
                             height={400}
@@ -139,22 +155,34 @@ export default function SiteDashbordScreen() {
                                 borderRadius: 16,
                                 backgroundColor: "#fff",
                             }}
-                        />
+                        /> */}
                     </View>
-                    {/* <View style={{ marginTop: 20 }}>
-                        <Text style={{ textAlign: 'center', fontSize: 20 }}>Pie Chart</Text>
+                    <View style={{ marginTop: 20 }}>
+                        <Text style={{ textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: colors.brand, marginBottom: 20 }}>Inspected Sites</Text>
                         <PieChart
                             data={pieData}
-                            width={400}
+                            width={Dimensions.get('window').width - 16}
                             height={400}
-                            chartConfig={chartConfig}
+                            chartConfig={{
+                                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                decimalPlaces: 2, // optional, defaults to 2dp
+                                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                                style: {
+                                    borderRadius: 16
+                                },
+
+                            }}
                             accessor="count"
-                            backgroundColor="transparent"
-                            paddingLeft="50"
+                            backgroundColor="#FFF"
+                            paddingLeft="40"
                             center={[10, 10]}
                             radius={100} // set the radius to a larger value
+                            absolute
                         />
-                    </View> */}
+
+
+                    </View>
 
                     <View>
                         <Text style={{ textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: colors.brand, marginBottom: 15 }}> Non-Inspected Sites</Text>

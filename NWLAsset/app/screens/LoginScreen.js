@@ -103,21 +103,22 @@ function LoginScreen({ navigation }) {
                                         </TouchableOpacity>
                                     }
                                     <View style={formStyle.line} />
-                                    {/* <TouchableOpacity onPress={handleSubmit} style={formStyle.googleButton}>
-                                        <Fontisto name='google' color={colors.red} size={25} />
-                                        <Text google={true} style={formStyle.googleText}>
 
-                                            Sign in with Google
-                                        </Text>
-
-                                    </TouchableOpacity> */}
                                     <View style={formStyle.extraView}>
                                         <Text style={formStyle.extraText}>
-                                            Don't have and account already?
+                                            Don't have an account already?
                                         </Text>
                                         <TouchableOpacity style={formStyle.textLink} onPress={() => navigation.navigate('SignUpScreen')} >
                                             <Text style={formStyle.textContent}>
                                                 Sign Up
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={formStyle.extraView}>
+
+                                        <TouchableOpacity style={formStyle.textLink} onPress={() => navigation.navigate('ForgotPasswordScreen')} >
+                                            <Text style={formStyle.textContent}>
+                                                Forgot Password?
                                             </Text>
                                         </TouchableOpacity>
                                     </View>

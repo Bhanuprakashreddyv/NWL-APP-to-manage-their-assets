@@ -3,6 +3,10 @@ import { View, Text, TouchableOpacity, TextInput, Image, StyleSheet, Alert, Acti
 import { FlatList } from 'react-native-gesture-handler';
 import { Dropdown } from 'react-native-element-dropdown';
 import ImageResizer from 'react-native-image-resizer';
+//import EnhancedImageViewing from 'react-native-image-viewing/dist/ImageViewing';
+
+import ImageViewing from 'react-native-image-viewing';
+
 
 import { Octicons, Ionicons } from '@expo/vector-icons'
 import { StatusBar } from 'expo-status-bar';
@@ -203,30 +207,10 @@ function InspectionScreen({ navigation }) {
 
         if (!result.canceled && result.assets) {
             const selectedImages = result.assets.filter((asset) => asset.type === 'image');
-            // Resize the selected images
-            // const resizedImages = await Promise.all(
-            //     selectedImages.map(async (image) => {
-            //         const resizedImage = await ImageManipulator.manipulateAsync(
-            //             image.uri,
-            //             [{ resize: { width: 600 } }],
-            //             { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-            //         );
-            //         return { uri: resizedImage.uri };
-            //     })
-            // );
-            // const resizedImages = await Promise.all(
-            //     selectedImages.map(async (image) => {
-            //         console.log(image.uri)
-            //         const resizedUri = await ImageResizer.createResizedImage(image.uri, 600, 600, 'JPEG', 70);
-            //         return { uri: resizedUri };
-            //     })
-            // );
             setImages([...images, ...selectedImages]);
 
-
-
-            const selectedVideos = result.assets.filter((asset) => asset.type === 'video');
-            setVideos([...videos, ...selectedVideos.map((video) => ({ uri: video.uri }))]);
+            // const selectedVideos = result.assets.filter((asset) => asset.type === 'video');
+            // setVideos([...videos, ...selectedVideos.map((video) => ({ uri: video.uri }))]);
 
             setShowImages(true);
         }
@@ -260,8 +244,12 @@ function InspectionScreen({ navigation }) {
         );
     };
 
-    const handleImagePress = (image) => {
-        // setSelectedImage(image);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isImageViewVisible, setIsImageViewVisible] = useState(false);
+
+    const handleImagePress = (index) => {
+        setCurrentIndex(index);
+        setIsImageViewVisible(true);
     };
 
 
@@ -278,12 +266,11 @@ function InspectionScreen({ navigation }) {
             const user = await getUserByUserId(userId)
 
             if (user !== null) {
-                console.log(' first fullName ' + user.fullName)
+                //console.log(' first fullName ' + user.fullName)
                 setUserFullName(user.fullName)
             }
 
-            console.log(' videos ' + JSON.stringify(videos))
-
+           
 
             // // Save the form data to Firestore
             const docId = await saveDataToFirestore('inspection', {
@@ -315,27 +302,10 @@ function InspectionScreen({ navigation }) {
             }));
 
 
-            // // console.log('Image URLs:', JSON.stringify(imageUrls));
-
-            // // Upload videos to Firebase Storage 
-            // const videoUrls = await Promise.all(videos.map(async (video) => {
-            //     const { uri } = video;
-            //     const response = await fetch(uri);
-            //     const blob = await response.blob();
-            //     const filename = blob._data.name;
-            //     const storageRef = ref(storage, `inspections/${filename}`);
-            //     const snapshot = await uploadBytesResumable(storageRef, blob);
-            //     const downloadUrl = await getDownloadURL(snapshot.ref);
-            //     return { url: downloadUrl };
-            // }));
-
-
-            // // console.log('Video URLs:', JSON.stringify(videoUrls));
 
             // // Update inspection data in Firestore with download URLs of media files
             await updateDataInCollection('inspection', docId, {
                 imageUrls: imageUrls,
-                //  videoUrls: videoUrls,
             });
 
             setSubmitting(false);
@@ -446,8 +416,8 @@ function InspectionScreen({ navigation }) {
                                 handleMessage('You can only upload one video at a time.');
                                 setSubmitting(false);
                             }
-                            else if (images.length > 4) {
-                                handleMessage('You can only upload four images at a time.');
+                            else if (images.length > 2) {
+                                handleMessage('You can only upload two images at a time.');
                                 setSubmitting(false);
                             }
                             else {
@@ -559,13 +529,13 @@ function InspectionScreen({ navigation }) {
 
                                     {showImages &&
                                         <View style={{ padding: 2 }}>
-                                            {images.length > 0 && (
+                                            {/* {images.length > 0 && (
                                                 <FlatList
                                                     data={images}
                                                     keyExtractor={(item, index) => index.toString()}
                                                     numColumns={2}
                                                     renderItem={({ item, index }) => (
-                                                        <View style={{ flex: 1 / 2 }}>
+                                                        <View style={{ flex: 1 }}>
                                                             <TouchableOpacity onPress={() => handleImagePress(item)} style={{ marginTop: 5, margin: 5 }}>
                                                                 <Image
                                                                     source={{ uri: item.uri }}
@@ -583,9 +553,43 @@ function InspectionScreen({ navigation }) {
                                                     )}
                                                     contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 16 }}
                                                 />
-                                            )}
 
-                                            {videos.length > 0 && (
+
+                                            )} */}
+
+                                            {images.map((item, index) => (
+                                                <TouchableOpacity key={index} onPress={() => handleImagePress(index)} style={{ marginTop: 5, margin: 5 }}>
+                                                    <Image
+                                                        source={{ uri: item.uri }}
+                                                        style={{ width: '100%', height: 350, borderRadius: 5 }}
+                                                    />
+                                                    <TouchableOpacity
+                                                        style={{ position: 'absolute', top: 8, right: 8 }}
+                                                        onPress={() => handleDeleteImage(index)}
+                                                    >
+                                                        <Ionicons name="md-trash" size={24} color="black" />
+                                                    </TouchableOpacity>
+                                                </TouchableOpacity>
+                                            ))}
+                                            <ImageViewing
+                                                images={images}
+                                                imageIndex={currentIndex}
+                                                visible={isImageViewVisible}
+                                                onRequestClose={() => setIsImageViewVisible(false)}
+                                                presentationStyle="overFullScreen"
+                                                swipeToCloseEnabled={false}
+                                                HeaderComponent={({ imageIndex }) => (
+                                                    <View style={{ position: 'absolute', top: 8, left: 40, marginTop: 50 }}>
+                                                        <Text style={{ color: '#ffffff' }}>{imageIndex + 1} / {images.length}</Text>
+                                                    </View>
+                                                )}
+                                                FooterComponent={({ imageIndex }) => (
+                                                    <TouchableOpacity style={{ position: 'absolute', bottom: 8, right: 30, marginBottom: 40, }} onPress={() => setIsImageViewVisible(false)}>
+                                                        <Text style={{ color: '#ffffff' }}>Close</Text>
+                                                    </TouchableOpacity>
+                                                )}
+                                            />
+                                            {/* {videos.length > 0 && (
                                                 <FlatList
                                                     data={videos}
                                                     keyExtractor={(item) => item.id}
@@ -604,7 +608,7 @@ function InspectionScreen({ navigation }) {
                                                         </View>
                                                     )}
                                                 />
-                                            )}
+                                            )} */}
                                         </View>
 
                                     }

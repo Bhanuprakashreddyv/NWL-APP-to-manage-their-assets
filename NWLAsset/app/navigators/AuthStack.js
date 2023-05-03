@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
-
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 
 import colors from '../Config/colors';
 
@@ -31,6 +31,8 @@ const AuthStack = () => {
 
             <Stack.Screen name='LoginScreen' component={LoginScreen} options={{ headerShown: false }} />
             <Stack.Screen options={{ headerTintColor: colors.brand }} name='SignUpScreen' component={SignUpScreen} />
+            <Stack.Screen options={{ headerTintColor: colors.brand }} name='ForgotPasswordScreen' component={ForgotPasswordScreen} />
+
         </Stack.Navigator>
 
     );
